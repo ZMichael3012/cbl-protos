@@ -91,6 +91,9 @@ func (PaymentEventType) EnumDescriptor() ([]byte, []int) {
 }
 
 // PaymentEvent описывает событие платежа для топика payment.events.
+// occurred_at в теле - время перехода состояния (авторитетно); заголовок
+// конверта обязан зеркалить его. state_version - монотонный счетчик переходов
+// платежа (владелец - Payment, 4.1); потребители отбрасывают устаревшие версии.
 type PaymentEvent struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

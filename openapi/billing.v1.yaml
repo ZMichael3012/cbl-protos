@@ -3,7 +3,8 @@ info:
   title: CBL Billing API
   version: 1.0.0-draft
   description: >
-    Мерчант API платформы крипто-биллинга CBL. Черновик CF-1, финализируется
+    Мерчант API платформы крипто-биллинга CBL. Черновик CF-2 (состав маршрутов
+    заморожен), финализируется
     задачей 7.1. Деньги передаются строкой-десятичным числом плюс код актива,
     float запрещен. Все мутирующие вызовы требуют заголовок Idempotency-Key.
 servers:
@@ -211,6 +212,9 @@ paths:
           in: query
           schema:
             type: string
+          description: >
+            Счет в рамках мерчанта из токена; серверная проверка владельца
+            обязательна (7.4), account_id детерминирован и не является секретом.
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/Cursor'
       responses:
@@ -259,6 +263,8 @@ paths:
       tags: [webhooks]
       operationId: registerWebhookEndpoint
       summary: Зарегистрировать URL вебхуков (секрет показывается один раз)
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         required: true
         content:
@@ -333,8 +339,10 @@ components:
           type: string
     Money:
       type: string
-      pattern: '^-?[0-9]+(\.[0-9]+)?$'
-      description: Строка-десятичное число в единицах актива, float запрещен
+      pattern: '^[0-9]+(\.[0-9]+)?$'
+      description: >
+        Строка-десятичное число в единицах актива, float запрещен;
+        неотрицательное, для сумм операций серверная валидация требует больше нуля
       examples: ["100.50"]
     Asset:
       type: object

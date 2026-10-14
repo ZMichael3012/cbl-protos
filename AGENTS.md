@@ -16,6 +16,8 @@ OpenAPI мерчанта (7.1) и admin (12.1).
 Точки заморозки контрактов: CF-1 (Payment, Quote, Ledger, Connector, события gateway),
 CF-2 (`payment.events`, `ledger.events`, `payout.commands`, `gateway.payout.events`),
 CF-3 (Notification, Reporting, `recon.alerts`, Admin API). См. `CBL-004`.
+Статус: CF-1 заморожен тегом `cbl-protos@cf-1` (13.10.2026), CF-2 - тегом
+`cbl-protos@cf-2` (15.10.2026, спека `.specs/CBL-CF2-freeze.md`).
 
 ## 2. Контракты и потребители
 
@@ -56,6 +58,9 @@ cbl-protos/
 # lint (Docker)
 docker run --rm -v "%CD%":/w -w /w bufbuild/buf:1.47.2 lint
 
+# breaking против последней заморозки (см. Makefile)
+docker run --rm -v "%CD%":/w -w /w bufbuild/buf:1.47.2 breaking --against ".git#tag=cbl-protos@cf-2"
+
 # генерация (нужны плагины в PATH: %USERPROFILE%\go\bin)
 go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.34.2
 go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.5.1
@@ -72,7 +77,9 @@ go build ./...
   против предыдущего тега, генерация, `go build ./...`.
 - Версия контракта фиксируется тегом `cbl-protos@<version>`; номер версии попадает в спеки
   зависимых сервисов.
-- Коммит: `CBL-<эпик>.<номер>: <краткое сообщение>`, спека в том же коммите.
+- Коммит: `CBL-<эпик>.<номер>: <краткое сообщение>`, спека в том же коммите. Контрактные
+  заморозки не имеют номера задачи плана: коммит `CBL-CF<n>`, тег `cbl-protos@cf-<n>`
+  (зафиксировано этой спекой и CBL-004).
 - Docstring на русском в стиле godoc для рукописного Go; сгенерированный код исключен.
 - Комментарии объясняют почему, а не что; ошибки через `%w`; панки запрещены.
 - Запрещены внешние proto-зависимости, кроме well-known types.
@@ -95,7 +102,8 @@ go build ./...
 
 | CBL | Дата | Статус | Спека | Коммит |
 | :-- | :-- | :-- | :-- | :-- |
-| CBL-1.7 | 2026-10-13 | done (buf lint, generate, go build, emdash - зеленые) | `.specs/CBL-1.7-protos-and-contract-freeze.md` | ожидает коммита/тега |
+| CBL-1.7 | 2026-10-13 | done (buf lint, generate, go build, emdash - зеленые; CF-1 заморожен) | `.specs/CBL-1.7-protos-and-contract-freeze.md` | 5c63b8b, тег `cbl-protos@cf-1` |
+| CBL-CF2 | 2026-10-15 | done (верификация схем против W1, buf lint/breaking против cf-1, generate без диффа; заморозка CF-2) | `.specs/CBL-CF2-freeze.md` | тег `cbl-protos@cf-2` |
 
 ## 9. Runbook
 

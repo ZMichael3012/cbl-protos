@@ -143,6 +143,11 @@ func (x *LedgerEntry) GetAmount() *v1.Money {
 }
 
 // LedgerEvent описывает событие леджера для топика ledger.events.
+// Семантика по типам (CF-2): transaction.posted несет полный набор entries;
+// reserve.created и reserve.released не создают проводок (удержание), entries
+// пуст, transaction_id пуст, идентификация - ref_type/ref_id и сумма операции
+// через gRPC леджера; reserve.committed несет сбалансированные entries захвата.
+// occurred_at в теле - время события; заголовок конверта зеркалит его.
 type LedgerEvent struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
