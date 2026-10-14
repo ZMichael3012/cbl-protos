@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package billing.events.v1;
+
+import "billing/common/v1/money.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/cbl/cbl-protos/gen/go/billing/events/v1;eventsv1";
+
+// LedgerEventType описывает типы событий леджера.
+enum LedgerEventType {
+  LEDGER_EVENT_TYPE_UNSPECIFIED = 0;
+  LEDGER_EVENT_TYPE_TRANSACTION_POSTED = 1;
+  LEDGER_EVENT_TYPE_RESERVE_CREATED = 2;
+  LEDGER_EVENT_TYPE_RESERVE_COMMITTED = 3;
+  LEDGER_EVENT_TYPE_RESERVE_RELEASED = 4;
+}
+
+// LedgerEntry описывает проводку в событии леджера.
+message LedgerEntry {
+  string account_id = 1;
+  billing.common.v1.Direction direction = 2;
+  billing.common.v1.Money amount = 3;
+}
+
+// LedgerEvent описывает событие леджера для топика ledger.events.
+message LedgerEvent {
+  string transaction_id = 1;
+  LedgerEventType type = 2;
+  string ref_type = 3;
+  string ref_id = 4;
+  repeated LedgerEntry entries = 5;
+  google.protobuf.Timestamp occurred_at = 6;
+}

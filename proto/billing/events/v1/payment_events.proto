@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package billing.events.v1;
+
+import "billing/common/v1/money.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/cbl/cbl-protos/gen/go/billing/events/v1;eventsv1";
+
+// PaymentEventType описывает типы событий жизненного цикла платежа.
+enum PaymentEventType {
+  PAYMENT_EVENT_TYPE_UNSPECIFIED = 0;
+  PAYMENT_EVENT_TYPE_CREATED = 1;
+  PAYMENT_EVENT_TYPE_DETECTED = 2;
+  PAYMENT_EVENT_TYPE_CONFIRMING = 3;
+  PAYMENT_EVENT_TYPE_COMPLETED = 4;
+  PAYMENT_EVENT_TYPE_EXPIRED = 5;
+  PAYMENT_EVENT_TYPE_UNDERPAID = 6;
+  PAYMENT_EVENT_TYPE_OVERPAID = 7;
+  PAYMENT_EVENT_TYPE_FAILED = 8;
+}
+
+// PaymentEvent описывает событие платежа для топика payment.events.
+message PaymentEvent {
+  string payment_id = 1;
+  string merchant_id = 2;
+  PaymentEventType type = 3;
+  billing.common.v1.Money expected_amount = 4;
+  billing.common.v1.Money received_amount = 5;
+  billing.common.v1.Money fee = 6;
+  string quote_id = 7;
+  string rate = 8;
+  string txid = 9;
+  uint64 state_version = 10;
+  google.protobuf.Timestamp occurred_at = 11;
+}

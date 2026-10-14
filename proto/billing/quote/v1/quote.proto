@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package billing.quote.v1;
+
+import "billing/common/v1/money.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/cbl/cbl-protos/gen/go/billing/quote/v1;quotev1";
+
+// LockQuoteRequest фиксирует курс на время жизни счета.
+message LockQuoteRequest {
+  string from_asset = 1;
+  string to_asset = 2;
+  billing.common.v1.Money amount = 3;
+  uint32 ttl_seconds = 4;
+}
+
+// LockQuoteResponse возвращает зафиксированную котировку.
+message LockQuoteResponse {
+  string quote_id = 1;
+  string rate = 2;
+  google.protobuf.Timestamp locked_until = 3;
+}
+
+// GetRateRequest запрашивает текущий курс пары активов.
+message GetRateRequest {
+  string base_asset = 1;
+  string quote_asset = 2;
+}
+
+// GetRateResponse возвращает текущий курс и время его получения.
+message GetRateResponse {
+  string rate = 1;
+  google.protobuf.Timestamp as_of = 2;
+}
+
+// QuoteService управляет курсами и зафиксированными котировками.
+service QuoteService {
+  rpc LockQuote(LockQuoteRequest) returns (LockQuoteResponse);
+  rpc GetRate(GetRateRequest) returns (GetRateResponse);
+}

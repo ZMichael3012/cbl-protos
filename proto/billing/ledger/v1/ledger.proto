@@ -1,0 +1,128 @@
+syntax = "proto3";
+
+package billing.ledger.v1;
+
+import "billing/common/v1/money.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/cbl/cbl-protos/gen/go/billing/ledger/v1;ledgerv1";
+
+// EntryInput описывает проводку во входе транзакции двойной записи.
+message EntryInput {
+  string account_id = 1;
+  billing.common.v1.Direction direction = 2;
+  billing.common.v1.Money amount = 3;
+}
+
+// Entry описывает сохраненную проводку.
+message Entry {
+  int64 entry_id = 1;
+  string transaction_id = 2;
+  string account_id = 3;
+  billing.common.v1.Direction direction = 4;
+  billing.common.v1.Money amount = 5;
+  string ref_type = 6;
+  string ref_id = 7;
+  google.protobuf.Timestamp created_at = 8;
+}
+
+// AccountBalance описывает доступный и зарезервированный остаток счета.
+message AccountBalance {
+  string account_id = 1;
+  billing.common.v1.Money available = 2;
+  billing.common.v1.Money reserved = 3;
+}
+
+// ReserveStatus описывает состояние резерва.
+enum ReserveStatus {
+  RESERVE_STATUS_UNSPECIFIED = 0;
+  RESERVE_STATUS_ACTIVE = 1;
+  RESERVE_STATUS_COMMITTED = 2;
+  RESERVE_STATUS_RELEASED = 3;
+}
+
+// PostTransactionRequest создает сбалансированную транзакцию.
+message PostTransactionRequest {
+  string idempotency_key = 1;
+  string ref_type = 2;
+  string ref_id = 3;
+  repeated EntryInput entries = 4;
+}
+
+// PostTransactionResponse возвращает идентификатор транзакции и остатки после проводки.
+message PostTransactionResponse {
+  string transaction_id = 1;
+  repeated AccountBalance balances_after = 2;
+}
+
+// ReserveRequest создает резерв средств на счете.
+message ReserveRequest {
+  string idempotency_key = 1;
+  string account_id = 2;
+  billing.common.v1.Money amount = 3;
+  string ref_id = 4;
+}
+
+// ReserveResponse возвращает резерв.
+message ReserveResponse {
+  string reserve_id = 1;
+  ReserveStatus status = 2;
+}
+
+// CommitReserveRequest превращает резерв в проводку.
+message CommitReserveRequest {
+  string idempotency_key = 1;
+  string reserve_id = 2;
+}
+
+// CommitReserveResponse возвращает состояние резерва.
+message CommitReserveResponse {
+  string reserve_id = 1;
+  ReserveStatus status = 2;
+}
+
+// ReleaseReserveRequest освобождает резерв.
+message ReleaseReserveRequest {
+  string idempotency_key = 1;
+  string reserve_id = 2;
+  string reason = 3;
+}
+
+// ReleaseReserveResponse возвращает состояние резерва.
+message ReleaseReserveResponse {
+  string reserve_id = 1;
+  ReserveStatus status = 2;
+}
+
+// GetBalanceRequest запрашивает баланс счета.
+message GetBalanceRequest {
+  string account_id = 1;
+}
+
+// GetBalanceResponse возвращает баланс счета.
+message GetBalanceResponse {
+  AccountBalance balance = 1;
+}
+
+// ListEntriesRequest запрашивает выписку по счету с курсорной пагинацией.
+message ListEntriesRequest {
+  string account_id = 1;
+  uint32 limit = 2;
+  string cursor = 3;
+}
+
+// ListEntriesResponse возвращает страницу проводок.
+message ListEntriesResponse {
+  repeated Entry entries = 1;
+  string next_cursor = 2;
+}
+
+// LedgerService ведет двойную запись, резервы и балансы.
+service LedgerService {
+  rpc PostTransaction(PostTransactionRequest) returns (PostTransactionResponse);
+  rpc Reserve(ReserveRequest) returns (ReserveResponse);
+  rpc CommitReserve(CommitReserveRequest) returns (CommitReserveResponse);
+  rpc ReleaseReserve(ReleaseReserveRequest) returns (ReleaseReserveResponse);
+  rpc GetBalance(GetBalanceRequest) returns (GetBalanceResponse);
+  rpc ListEntries(ListEntriesRequest) returns (ListEntriesResponse);
+}

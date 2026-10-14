@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+package billing.events.v1;
+
+import "billing/common/v1/money.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/cbl/cbl-protos/gen/go/billing/events/v1;eventsv1";
+
+// GatewayWebhookRaw описывает сырой вебхук провайдера до нормализации.
+message GatewayWebhookRaw {
+  string provider = 1;
+  string gateway_id = 2;
+  google.protobuf.Timestamp received_at = 3;
+  map<string, string> headers = 4;
+  bytes raw_body = 5;
+  bool signature_verified = 6;
+}
+
+// CanonicalPaymentEventType описывает канонические события платежа от шлюза.
+enum CanonicalPaymentEventType {
+  CANONICAL_PAYMENT_EVENT_TYPE_UNSPECIFIED = 0;
+  CANONICAL_PAYMENT_EVENT_TYPE_DETECTED = 1;
+  CANONICAL_PAYMENT_EVENT_TYPE_CONFIRMED = 2;
+  CANONICAL_PAYMENT_EVENT_TYPE_FAILED = 3;
+  CANONICAL_PAYMENT_EVENT_TYPE_EXPIRED = 4;
+  CANONICAL_PAYMENT_EVENT_TYPE_UNDERPAID = 5;
+  CANONICAL_PAYMENT_EVENT_TYPE_OVERPAID = 6;
+}
+
+// CanonicalPaymentEvent описывает нормализованное событие платежа от шлюза.
+message CanonicalPaymentEvent {
+  string payment_id = 1;
+  string gateway_id = 2;
+  string provider = 3;
+  CanonicalPaymentEventType type = 4;
+  billing.common.v1.Money received_amount = 5;
+  uint32 confirmations = 6;
+  string txid = 7;
+  string network = 8;
+  google.protobuf.Timestamp gateway_event_ts = 9;
+}
+
+// GatewayPayoutEventType описывает канонические события выплаты от шлюза.
+enum GatewayPayoutEventType {
+  GATEWAY_PAYOUT_EVENT_TYPE_UNSPECIFIED = 0;
+  GATEWAY_PAYOUT_EVENT_TYPE_SUBMITTED = 1;
+  GATEWAY_PAYOUT_EVENT_TYPE_CONFIRMED = 2;
+  GATEWAY_PAYOUT_EVENT_TYPE_FAILED = 3;
+}
+
+// GatewayPayoutEvent описывает результат внешнего шага выплаты.
+message GatewayPayoutEvent {
+  string payout_id = 1;
+  string gateway_payout_id = 2;
+  GatewayPayoutEventType type = 3;
+  string txid = 4;
+  billing.common.v1.Money fee = 5;
+  string reason = 6;
+}

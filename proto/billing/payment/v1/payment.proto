@@ -1,0 +1,109 @@
+syntax = "proto3";
+
+package billing.payment.v1;
+
+import "billing/common/v1/money.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/cbl/cbl-protos/gen/go/billing/payment/v1;paymentv1";
+
+// PaymentState описывает состояния конечного автомата платежа.
+enum PaymentState {
+  PAYMENT_STATE_UNSPECIFIED = 0;
+  PAYMENT_STATE_CREATING = 1;
+  PAYMENT_STATE_CREATED = 2;
+  PAYMENT_STATE_PENDING = 3;
+  PAYMENT_STATE_DETECTED = 4;
+  PAYMENT_STATE_CONFIRMING = 5;
+  PAYMENT_STATE_COMPLETED = 6;
+  PAYMENT_STATE_EXPIRED = 7;
+  PAYMENT_STATE_UNDERPAID = 8;
+  PAYMENT_STATE_OVERPAID = 9;
+  PAYMENT_STATE_FAILED = 10;
+  PAYMENT_STATE_CANCELLED = 11;
+}
+
+// TimelineItem описывает одну запись истории состояний платежа.
+message TimelineItem {
+  PaymentState state = 1;
+  google.protobuf.Timestamp occurred_at = 2;
+  string comment = 3;
+}
+
+// Payment описывает платеж и его текущее состояние.
+message Payment {
+  string payment_id = 1;
+  string merchant_id = 2;
+  PaymentState state = 3;
+  billing.common.v1.Money expected_amount = 4;
+  billing.common.v1.Money received_amount = 5;
+  string pay_address = 6;
+  string network = 7;
+  string quote_id = 8;
+  uint64 state_version = 9;
+  google.protobuf.Timestamp created_at = 10;
+  google.protobuf.Timestamp expires_at = 11;
+  repeated TimelineItem timeline = 12;
+}
+
+// CreatePaymentRequest создает платеж с фиксацией котировки курса.
+message CreatePaymentRequest {
+  string idempotency_key = 1;
+  string merchant_id = 2;
+  billing.common.v1.Money amount = 3;
+  string pay_asset = 4;
+  string network = 5;
+  google.protobuf.Timestamp expires_at = 6;
+}
+
+// CreatePaymentResponse возвращает созданный платеж и реквизиты оплаты.
+message CreatePaymentResponse {
+  string payment_id = 1;
+  PaymentState state = 2;
+  string pay_address = 3;
+  string quote_id = 4;
+  google.protobuf.Timestamp expires_at = 5;
+}
+
+// GetPaymentRequest запрашивает платеж по идентификатору.
+message GetPaymentRequest {
+  string payment_id = 1;
+}
+
+// GetPaymentResponse возвращает платеж с историей состояний.
+message GetPaymentResponse {
+  Payment payment = 1;
+}
+
+// ListPaymentsRequest запрашивает страницу платежей с курсорной пагинацией.
+message ListPaymentsRequest {
+  string merchant_id = 1;
+  PaymentState state_filter = 2;
+  uint32 limit = 3;
+  string cursor = 4;
+}
+
+// ListPaymentsResponse возвращает страницу платежей.
+message ListPaymentsResponse {
+  repeated Payment payments = 1;
+  string next_cursor = 2;
+}
+
+// CancelPaymentRequest отменяет платеж до обнаружения оплаты.
+message CancelPaymentRequest {
+  string payment_id = 1;
+  string idempotency_key = 2;
+}
+
+// CancelPaymentResponse возвращает состояние отмененного платежа.
+message CancelPaymentResponse {
+  Payment payment = 1;
+}
+
+// PaymentService управляет жизненным циклом платежа.
+service PaymentService {
+  rpc CreatePayment(CreatePaymentRequest) returns (CreatePaymentResponse);
+  rpc GetPayment(GetPaymentRequest) returns (GetPaymentResponse);
+  rpc ListPayments(ListPaymentsRequest) returns (ListPaymentsResponse);
+  rpc CancelPayment(CancelPaymentRequest) returns (CancelPaymentResponse);
+}

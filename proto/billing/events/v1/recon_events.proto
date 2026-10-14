@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package billing.events.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/cbl/cbl-protos/gen/go/billing/events/v1;eventsv1";
+
+// ReconAlertType описывает класс расхождения сверки.
+enum ReconAlertType {
+  RECON_ALERT_TYPE_UNSPECIFIED = 0;
+  RECON_ALERT_TYPE_MISSING_IN_LEDGER = 1;
+  RECON_ALERT_TYPE_AMOUNT_MISMATCH = 2;
+  RECON_ALERT_TYPE_STATUS_MISMATCH = 3;
+}
+
+// ReconAlertSeverity описывает критичность расхождения.
+enum ReconAlertSeverity {
+  RECON_ALERT_SEVERITY_UNSPECIFIED = 0;
+  RECON_ALERT_SEVERITY_INFO = 1;
+  RECON_ALERT_SEVERITY_WARNING = 2;
+  RECON_ALERT_SEVERITY_CRITICAL = 3;
+}
+
+// ReconAlert описывает расхождение сверки для топика recon.alerts.
+message ReconAlert {
+  string alert_id = 1;
+  ReconAlertType type = 2;
+  string ref_id = 3;
+  ReconAlertSeverity severity = 4;
+  string expected = 5;
+  string actual = 6;
+  google.protobuf.Timestamp created_at = 7;
+}

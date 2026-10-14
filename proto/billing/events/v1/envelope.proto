@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package billing.events.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/cbl/cbl-protos/gen/go/billing/events/v1;eventsv1";
+
+// EventMeta описывает служебные заголовки Kafka-сообщения конверта CBL.
+message EventMeta {
+  // EventID задает UUIDv7 сообщения, ключ идемпотентности inbox.
+  string event_id = 1;
+  // EventType задает тип события, например payment.completed.
+  string event_type = 2;
+  // OccurredAt задает время возникновения события в UTC.
+  google.protobuf.Timestamp occurred_at = 3;
+  // Producer задает сервис-продюсер события.
+  string producer = 4;
+  // Traceparent задает W3C trace context для сквозной трассировки.
+  string traceparent = 5;
+  // SchemaVersion задает версию схемы события.
+  string schema_version = 6;
+}

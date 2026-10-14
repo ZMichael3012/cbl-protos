@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package billing.events.v1;
+
+import "billing/common/v1/money.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/cbl/cbl-protos/gen/go/billing/events/v1;eventsv1";
+
+// PayoutCommand описывает команду выплаты в топике payout.commands.
+message PayoutCommand {
+  string payout_id = 1;
+  billing.common.v1.Money amount = 2;
+  string network = 3;
+  string address = 4;
+  string idempotency_key = 5;
+}
+
+// PayoutEventType описывает типы событий жизненного цикла выплаты.
+enum PayoutEventType {
+  PAYOUT_EVENT_TYPE_UNSPECIFIED = 0;
+  PAYOUT_EVENT_TYPE_REQUESTED = 1;
+  PAYOUT_EVENT_TYPE_APPROVED = 2;
+  PAYOUT_EVENT_TYPE_COMPLETED = 3;
+  PAYOUT_EVENT_TYPE_FAILED = 4;
+  PAYOUT_EVENT_TYPE_COMPENSATED = 5;
+}
+
+// PayoutEvent описывает событие выплаты для топика payout.events.
+message PayoutEvent {
+  string payout_id = 1;
+  string merchant_id = 2;
+  PayoutEventType type = 3;
+  billing.common.v1.Money amount = 4;
+  billing.common.v1.Money fee = 5;
+  string txid = 6;
+  string provider = 7;
+  string failure_reason = 8;
+  uint64 state_version = 9;
+  google.protobuf.Timestamp occurred_at = 10;
+}

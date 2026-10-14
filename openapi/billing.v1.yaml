@@ -1,0 +1,578 @@
+openapi: 3.1.0
+info:
+  title: CBL Billing API
+  version: 1.0.0-draft
+  description: >
+    Мерчант API платформы крипто-биллинга CBL. Черновик CF-1, финализируется
+    задачей 7.1. Деньги передаются строкой-десятичным числом плюс код актива,
+    float запрещен. Все мутирующие вызовы требуют заголовок Idempotency-Key.
+servers:
+  - url: https://billing.example.com/v1
+    description: Периметр (API Gateway)
+tags:
+  - name: invoices
+  - name: payouts
+  - name: refunds
+  - name: balances
+  - name: ledger
+  - name: reports
+  - name: webhooks
+security:
+  - bearerAuth: []
+paths:
+  /invoices:
+    post:
+      tags: [invoices]
+      operationId: createInvoice
+      summary: Создать счет
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvoiceCreateRequest'
+      responses:
+        '201':
+          description: Счет создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invoice'
+        '400':
+          $ref: '#/components/responses/Problem'
+        '401':
+          $ref: '#/components/responses/Problem'
+        '409':
+          $ref: '#/components/responses/Problem'
+        '422':
+          $ref: '#/components/responses/Problem'
+        '429':
+          $ref: '#/components/responses/Problem'
+        '503':
+          $ref: '#/components/responses/Problem'
+    get:
+      tags: [invoices]
+      operationId: listInvoices
+      summary: Список счетов
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/InvoiceStatus'
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: merchant_order_id
+          in: query
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Страница счетов
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvoiceList'
+        '401':
+          $ref: '#/components/responses/Problem'
+  /invoices/{id}:
+    get:
+      tags: [invoices]
+      operationId: getInvoice
+      summary: Статус счета
+      parameters:
+        - $ref: '#/components/parameters/InvoiceID'
+      responses:
+        '200':
+          description: Счет
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invoice'
+        '404':
+          $ref: '#/components/responses/Problem'
+  /invoices/{id}/cancel:
+    post:
+      tags: [invoices]
+      operationId: cancelInvoice
+      summary: Отменить счет до обнаружения оплаты
+      parameters:
+        - $ref: '#/components/parameters/InvoiceID'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Счет отменен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invoice'
+        '409':
+          $ref: '#/components/responses/Problem'
+        '404':
+          $ref: '#/components/responses/Problem'
+  /payouts:
+    post:
+      tags: [payouts]
+      operationId: createPayout
+      summary: Заказать выплату
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PayoutCreateRequest'
+      responses:
+        '201':
+          description: Выплата создана
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payout'
+        '409':
+          $ref: '#/components/responses/Problem'
+        '422':
+          $ref: '#/components/responses/Problem'
+  /payouts/{id}:
+    get:
+      tags: [payouts]
+      operationId: getPayout
+      summary: Статус выплаты
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Выплата
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payout'
+        '404':
+          $ref: '#/components/responses/Problem'
+  /refunds:
+    post:
+      tags: [refunds]
+      operationId: createRefund
+      summary: Создать возврат по подтвержденному счету
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefundCreateRequest'
+      responses:
+        '201':
+          description: Возврат создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Refund'
+        '409':
+          $ref: '#/components/responses/Problem'
+        '422':
+          $ref: '#/components/responses/Problem'
+  /balances:
+    get:
+      tags: [balances]
+      operationId: getBalances
+      summary: Балансы мерчанта по активам
+      responses:
+        '200':
+          description: Балансы
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BalanceList'
+  /ledger/entries:
+    get:
+      tags: [ledger]
+      operationId: listLedgerEntries
+      summary: Выписка по проводкам
+      parameters:
+        - name: account_id
+          in: query
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Страница проводок
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LedgerEntryList'
+  /reports/{report_type}:
+    get:
+      tags: [reports]
+      operationId: getReport
+      summary: Отчет из ClickHouse (merchant_id берется из токена)
+      parameters:
+        - name: report_type
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: period_from
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: period_to
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: group_by
+          in: query
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Страница отчета
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportPage'
+  /webhook-endpoints:
+    post:
+      tags: [webhooks]
+      operationId: registerWebhookEndpoint
+      summary: Зарегистрировать URL вебхуков (секрет показывается один раз)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookEndpointRequest'
+      responses:
+        '201':
+          description: Эндпоинт зарегистрирован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookEndpointResponse'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: API-ключ мерчанта
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema:
+        type: string
+        maxLength: 128
+    InvoiceID:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    Limit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    Cursor:
+      name: cursor
+      in: query
+      schema:
+        type: string
+  responses:
+    Problem:
+      description: Ошибка в формате application/problem+json (RFC 9457)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+  schemas:
+    Problem:
+      type: object
+      required: [type, title, status]
+      properties:
+        type:
+          type: string
+          format: uri-reference
+        title:
+          type: string
+        status:
+          type: integer
+        code:
+          type: string
+          description: Машиночитаемый код, например idempotency_key_reuse
+        detail:
+          type: string
+        request_id:
+          type: string
+    Money:
+      type: string
+      pattern: '^-?[0-9]+(\.[0-9]+)?$'
+      description: Строка-десятичное число в единицах актива, float запрещен
+      examples: ["100.50"]
+    Asset:
+      type: object
+      required: [amount, currency]
+      properties:
+        amount:
+          $ref: '#/components/schemas/Money'
+        currency:
+          type: string
+          examples: [USDT]
+    Quote:
+      type: object
+      properties:
+        rate:
+          type: string
+        locked_until:
+          type: string
+          format: date-time
+    TimelineItem:
+      type: object
+      properties:
+        state:
+          $ref: '#/components/schemas/InvoiceStatus'
+        occurred_at:
+          type: string
+          format: date-time
+    InvoiceStatus:
+      type: string
+      enum: [creating, created, pending, detected, confirming, completed, expired, underpaid, overpaid, failed, cancelled]
+    Invoice:
+      type: object
+      properties:
+        id:
+          type: string
+        merchant_order_id:
+          type: string
+        status:
+          $ref: '#/components/schemas/InvoiceStatus'
+        amount:
+          $ref: '#/components/schemas/Asset'
+        pay_amount:
+          $ref: '#/components/schemas/Asset'
+        pay_address:
+          type: string
+        network:
+          type: string
+        paid_amount:
+          $ref: '#/components/schemas/Asset'
+        confirmations:
+          type: integer
+        txid:
+          type: string
+        quote:
+          $ref: '#/components/schemas/Quote'
+        expires_at:
+          type: string
+          format: date-time
+        checkout_url:
+          type: string
+          format: uri
+        timeline:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimelineItem'
+        metadata:
+          type: object
+          additionalProperties:
+            type: string
+    InvoiceCreateRequest:
+      type: object
+      required: [merchant_order_id, amount, currency, pay_currency, network]
+      properties:
+        merchant_order_id:
+          type: string
+        amount:
+          $ref: '#/components/schemas/Money'
+        currency:
+          type: string
+        pay_currency:
+          type: string
+        network:
+          type: string
+        expires_in_sec:
+          type: integer
+          minimum: 60
+          maximum: 86400
+        metadata:
+          type: object
+          additionalProperties:
+            type: string
+    InvoiceList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Invoice'
+        next_cursor:
+          type: string
+    PayoutState:
+      type: string
+      enum: [requested, approved, reserved, sent_to_gateway, completed, failed, compensated, rejected]
+    Payout:
+      type: object
+      properties:
+        id:
+          type: string
+        status:
+          $ref: '#/components/schemas/PayoutState'
+        amount:
+          $ref: '#/components/schemas/Asset'
+        fee:
+          $ref: '#/components/schemas/Asset'
+        network:
+          type: string
+        destination_address:
+          type: string
+        txid:
+          type: string
+        failure_reason:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+    PayoutCreateRequest:
+      type: object
+      required: [amount, currency, network, destination_address]
+      properties:
+        amount:
+          $ref: '#/components/schemas/Money'
+        currency:
+          type: string
+        network:
+          type: string
+        destination_address:
+          type: string
+        merchant_ref:
+          type: string
+    RefundCreateRequest:
+      type: object
+      required: [invoice_id, amount, destination_address]
+      properties:
+        invoice_id:
+          type: string
+        amount:
+          $ref: '#/components/schemas/Money'
+        destination_address:
+          type: string
+    Refund:
+      type: object
+      properties:
+        id:
+          type: string
+        invoice_id:
+          type: string
+        status:
+          $ref: '#/components/schemas/PayoutState'
+        amount:
+          $ref: '#/components/schemas/Asset'
+    BalanceList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              currency:
+                type: string
+              available:
+                $ref: '#/components/schemas/Money'
+              reserved:
+                $ref: '#/components/schemas/Money'
+              pending:
+                $ref: '#/components/schemas/Money'
+    LedgerEntry:
+      type: object
+      properties:
+        entry_id:
+          type: integer
+          format: int64
+        account_id:
+          type: string
+        direction:
+          type: string
+          enum: [debit, credit]
+        amount:
+          $ref: '#/components/schemas/Asset'
+        ref_type:
+          type: string
+        ref_id:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+    LedgerEntryList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/LedgerEntry'
+        next_cursor:
+          type: string
+    ReportPage:
+      type: object
+      properties:
+        rows:
+          type: array
+          items:
+            type: object
+            additionalProperties:
+              type: string
+        next_cursor:
+          type: string
+    WebhookEndpointRequest:
+      type: object
+      required: [url, events]
+      properties:
+        url:
+          type: string
+          format: uri
+          description: Только https, SSRF-защита на стороне платформы
+        events:
+          type: array
+          items:
+            type: string
+    WebhookEndpointResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        url:
+          type: string
+        events:
+          type: array
+          items:
+            type: string
+        signing_secret:
+          type: string
+          description: Показывается один раз при регистрации

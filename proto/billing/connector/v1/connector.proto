@@ -1,0 +1,100 @@
+syntax = "proto3";
+
+package billing.connector.v1;
+
+import "billing/common/v1/money.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/cbl/cbl-protos/gen/go/billing/connector/v1;connectorv1";
+
+// CanonicalPaymentStatusValue описывает канонический статус платежа у провайдера.
+enum CanonicalPaymentStatusValue {
+  CANONICAL_PAYMENT_STATUS_VALUE_UNSPECIFIED = 0;
+  CANONICAL_PAYMENT_STATUS_VALUE_DETECTED = 1;
+  CANONICAL_PAYMENT_STATUS_VALUE_CONFIRMED = 2;
+  CANONICAL_PAYMENT_STATUS_VALUE_FAILED = 3;
+  CANONICAL_PAYMENT_STATUS_VALUE_EXPIRED = 4;
+  CANONICAL_PAYMENT_STATUS_VALUE_UNDERPAID = 5;
+  CANONICAL_PAYMENT_STATUS_VALUE_OVERPAID = 6;
+}
+
+// CanonicalPaymentStatus описывает статус платежа в единой модели платформы.
+message CanonicalPaymentStatus {
+  string payment_id = 1;
+  string gateway_id = 2;
+  string provider = 3;
+  CanonicalPaymentStatusValue status = 4;
+  billing.common.v1.Money received_amount = 5;
+  uint32 confirmations = 6;
+  string txid = 7;
+  string network = 8;
+  google.protobuf.Timestamp gateway_event_ts = 9;
+}
+
+// Capability описывает возможности провайдера по сети и активу.
+message Capability {
+  string network = 1;
+  string asset = 2;
+  billing.common.v1.Money min_amount = 3;
+  uint32 confirmation_depth = 4;
+}
+
+// CreateInvoiceRequest создает счет во внешнем шлюзе.
+message CreateInvoiceRequest {
+  string idempotency_key = 1;
+  string payment_id = 2;
+  billing.common.v1.Money amount = 3;
+  string asset = 4;
+  string network = 5;
+  google.protobuf.Timestamp expires_at = 6;
+}
+
+// CreateInvoiceResponse возвращает реквизиты оплаты от шлюза.
+message CreateInvoiceResponse {
+  string gateway_invoice_id = 1;
+  string provider = 2;
+  string address = 3;
+  google.protobuf.Timestamp expires_at = 4;
+}
+
+// GetGatewayPaymentRequest перепроверяет статус платежа у шлюза.
+message GetGatewayPaymentRequest {
+  string provider = 1;
+  string gateway_id = 2;
+}
+
+// GetGatewayPaymentResponse возвращает канонический статус.
+message GetGatewayPaymentResponse {
+  CanonicalPaymentStatus payment = 1;
+}
+
+// ListGatewayPaymentsRequest выгружает операции шлюза для сверки.
+message ListGatewayPaymentsRequest {
+  string provider = 1;
+  google.protobuf.Timestamp from = 2;
+  google.protobuf.Timestamp to = 3;
+  uint32 limit = 4;
+  string cursor = 5;
+}
+
+// ListGatewayPaymentsResponse возвращает страницу операций шлюза.
+message ListGatewayPaymentsResponse {
+  repeated CanonicalPaymentStatus payments = 1;
+  string next_cursor = 2;
+}
+
+// GetCapabilitiesRequest запрашивает возможности провайдеров.
+message GetCapabilitiesRequest {}
+
+// GetCapabilitiesResponse возвращает список возможностей.
+message GetCapabilitiesResponse {
+  repeated Capability capabilities = 1;
+}
+
+// ConnectorService абстрагирует внешние крипто-шлюзы.
+service ConnectorService {
+  rpc CreateInvoice(CreateInvoiceRequest) returns (CreateInvoiceResponse);
+  rpc GetGatewayPayment(GetGatewayPaymentRequest) returns (GetGatewayPaymentResponse);
+  rpc ListGatewayPayments(ListGatewayPaymentsRequest) returns (ListGatewayPaymentsResponse);
+  rpc GetCapabilities(GetCapabilitiesRequest) returns (GetCapabilitiesResponse);
+}

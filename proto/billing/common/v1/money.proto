@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package billing.common.v1;
+
+option go_package = "github.com/cbl/cbl-protos/gen/go/billing/common/v1;commonv1";
+
+// Money описывает денежную сумму в минимальных единицах актива.
+// Внутри систем используется int64 в минимальных единицах плюс decimals, float запрещен.
+message Money {
+  // MinorUnits задает сумму в минимальных единицах актива.
+  int64 minor_units = 1;
+  // Asset задает код актива, например USDT или BTC.
+  string asset = 2;
+  // Decimals задает число знаков после точки для отображения и парсинга.
+  uint32 decimals = 3;
+}
+
+// Direction задает направление проводки в двойной записи.
+enum Direction {
+  DIRECTION_UNSPECIFIED = 0;
+  DIRECTION_DEBIT = 1;
+  DIRECTION_CREDIT = 2;
+}

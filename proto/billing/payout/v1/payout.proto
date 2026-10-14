@@ -1,0 +1,82 @@
+syntax = "proto3";
+
+package billing.payout.v1;
+
+import "billing/common/v1/money.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/cbl/cbl-protos/gen/go/billing/payout/v1;payoutv1";
+
+// PayoutState описывает состояния конечного автомата выплаты.
+enum PayoutState {
+  PAYOUT_STATE_UNSPECIFIED = 0;
+  PAYOUT_STATE_REQUESTED = 1;
+  PAYOUT_STATE_APPROVED = 2;
+  PAYOUT_STATE_RESERVED = 3;
+  PAYOUT_STATE_SENT_TO_GATEWAY = 4;
+  PAYOUT_STATE_COMPLETED = 5;
+  PAYOUT_STATE_FAILED = 6;
+  PAYOUT_STATE_COMPENSATED = 7;
+  PAYOUT_STATE_REJECTED = 8;
+}
+
+// Payout описывает выплату и ее текущее состояние.
+message Payout {
+  string payout_id = 1;
+  string merchant_id = 2;
+  PayoutState state = 3;
+  billing.common.v1.Money amount = 4;
+  billing.common.v1.Money fee = 5;
+  string network = 6;
+  string destination_address = 7;
+  string txid = 8;
+  string failure_reason = 9;
+  uint64 state_version = 10;
+  google.protobuf.Timestamp created_at = 11;
+}
+
+// CreatePayoutRequest создает заявку на выплату.
+message CreatePayoutRequest {
+  string idempotency_key = 1;
+  string merchant_id = 2;
+  billing.common.v1.Money amount = 3;
+  string network = 4;
+  string destination_address = 5;
+  string merchant_ref = 6;
+}
+
+// CreatePayoutResponse возвращает созданную заявку.
+message CreatePayoutResponse {
+  string payout_id = 1;
+  PayoutState state = 2;
+}
+
+// ApprovePayoutRequest подтверждает или отклоняет крупную выплату.
+message ApprovePayoutRequest {
+  string payout_id = 1;
+  string operator_id = 2;
+  bool approve = 3;
+  string reason = 4;
+}
+
+// ApprovePayoutResponse возвращает состояние выплаты.
+message ApprovePayoutResponse {
+  Payout payout = 1;
+}
+
+// GetPayoutRequest запрашивает выплату по идентификатору.
+message GetPayoutRequest {
+  string payout_id = 1;
+}
+
+// GetPayoutResponse возвращает выплату.
+message GetPayoutResponse {
+  Payout payout = 1;
+}
+
+// PayoutService управляет сагой выплат и возвратов.
+service PayoutService {
+  rpc CreatePayout(CreatePayoutRequest) returns (CreatePayoutResponse);
+  rpc ApprovePayout(ApprovePayoutRequest) returns (ApprovePayoutResponse);
+  rpc GetPayout(GetPayoutRequest) returns (GetPayoutResponse);
+}
