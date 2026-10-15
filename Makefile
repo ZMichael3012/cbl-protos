@@ -9,7 +9,7 @@ lint:
 # breaking сверяется с последней заморозкой (включая инкрементальные cf-N.M):
 # перед выпуском новой версии заменить тег на актуальный.
 breaking:
-	$(DOCKER_BUF) breaking --against ".git#tag=cbl-protos@cf-3.3"
+	$(DOCKER_BUF) breaking --against ".git#tag=cbl-protos@cf-3.4"
 
 generate:
 	go run github.com/bufbuild/buf/cmd/buf@$(BUF_VERSION) generate

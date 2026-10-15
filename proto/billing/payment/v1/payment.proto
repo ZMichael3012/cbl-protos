@@ -51,6 +51,10 @@ message Payment {
   string rate = 13;
   // LockedUntil задает срок фиксации котировки (аддитивно cf-3.3).
   google.protobuf.Timestamp locked_until = 14;
+  // Txid задает хэш транзакции сети (аддитивно cf-3.4).
+  string txid = 15;
+  // Confirmations задает число подтверждений сети (аддитивно cf-3.4).
+  uint32 confirmations = 16;
 }
 
 // CreatePaymentRequest создает платеж с фиксацией котировки курса.
@@ -74,6 +78,9 @@ message CreatePaymentResponse {
   string rate = 6;
   // LockedUntil задает срок фиксации котировки (аддитивно cf-3.3).
   google.protobuf.Timestamp locked_until = 7;
+  // ExpectedAmount задает зафиксированную сумму и актив оплаты (аддитивно
+  // cf-3.4): источник pay_amount/pay_asset ответа 201 счета мерчанта 7.4.
+  billing.common.v1.Money expected_amount = 8;
 }
 
 // GetPaymentRequest запрашивает платеж по идентификатору.
@@ -89,8 +96,8 @@ message GetPaymentResponse {
 // ListPaymentsRequest запрашивает страницу платежей с курсорной пагинацией.
 // merchant_id обязателен (владелец из токена); created_from и created_to
 // фильтруют по времени создания (from включительно, to исключительно,
-// незаданные границы не ограничивают); cursor - payment_id последней записи
-// предыдущей страницы (порядок created_at DESC, id DESC).
+// незаданные границы не ограничивают); cursor - непрозрачное значение
+// next_cursor из предыдущего ответа (порядок created_at DESC, id DESC).
 message ListPaymentsRequest {
   string merchant_id = 1;
   PaymentState state_filter = 2;
