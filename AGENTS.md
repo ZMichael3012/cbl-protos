@@ -117,6 +117,7 @@ go build ./...
 | CBL-CF3 | 2026-10-15 | done (webhooks.v1.yaml - каталог с invoice.failed, самодостаточные схемы данных, подпись, повторы; новый billing/notification/v1; Admin API v1 - ревизия routing, субъект из токена; Reporting Query v1 - комментарии; recon.alerts v1 + merchant_id; аддитивный PAYOUT_EVENT_TYPE_REJECTED; buf lint/breaking против cf-2.1, generate, build зеленые; заморозка CF-3) | `.specs/CBL-CF3-freeze.md` | тег `cbl-protos@cf-3` |
 | CBL-7.1 | 2026-10-15 | done, ревью закрыто (billing.v1.yaml 1.0.0: единые Problem-компоненты и Retry-After, Idempotent-Replayed, обязательные поля схем, closed-запросы, bearer-scoping; CBL-003 раздел 2 синхронизирован) | `.specs/CBL-7.1-openapi-finalization.md` | e9283e1, тег `cbl-protos@cf-3.1` |
 | CBL-2.10 | 2026-10-15 | done (аддитивные ListMerchantAccounts и merchant_ref/период ListEntries для BFF-выписок 7.4; buf lint/breaking против cf-3.1, generate, build зеленые; тег cf-3.2; реализация - cbl-ledger fbe0c45) | `.specs/CBL-2.10-ledger-fields.md` | c0d2c54 |
+| CBL-4.8 | 2026-10-15 | done (Payment: rate/locked_until (cf-3.3), txid/confirmations, expected_amount создания (cf-3.4), период ListPayments; buf lint/breaking, generate, build зеленые; реализация - cbl-payment bc903bd) | `.specs/CBL-4.8-payment-invoice-fields.md` | 96002bb, 6d1f442; теги `cbl-protos@cf-3.3`/`cf-3.4` |
 
 ## 9. Runbook
 

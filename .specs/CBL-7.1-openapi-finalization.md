@@ -92,11 +92,12 @@ FR-8. Предпосылки 7.4 (зафиксированы ревью 7.1, р�
 задачами до старта 7.4): 2.10 - аддитивное расширение Ledger gRPC
 (`ListMerchantAccounts` со счетами, балансами и ownership; period-фильтр
 `ListEntries`) для `/balances` и `/ledger/entries`; 4.8 - аддитивное
-расширение Payment gRPC (`rate`, `locked_until`, `pay_amount`/`pay_asset` в
-`Payment`/`CreatePaymentResponse`, фильтры `ListPayments`) для полноты 201
-создания счета; оба - пакеты cf-3.x. `pending` в балансах - агрегация Payment
-(состояния detected/confirming), не данные Ledger; checkout-контракт создается
-задачей 7.6 отдельным артефактом, 7.1 фиксирует только `checkout_url`.
+расширение Payment gRPC (cf-3.3/cf-3.4: `rate`, `locked_until`,
+`txid`/`confirmations`, `expected_amount` создания (источник `pay_amount`
+ответа 201), период `ListPayments`) для полноты инвойса; оба - пакеты cf-3.x.
+`pending` в балансах - агрегация Payment (состояния detected/confirming), не
+данные Ledger; checkout-контракт создается задачей 7.6 отдельным артефактом,
+7.1 фиксирует только `checkout_url`.
 
 ## 4. Проверки
 
