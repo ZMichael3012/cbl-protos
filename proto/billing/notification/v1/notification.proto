@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package billing.notification.v1;
+
+option go_package = "github.com/cbl/cbl-protos/gen/go/billing/notification/v1;notificationv1";
+
+// RegisterWebhookEndpointRequest регистрирует URL вебхуков мерчанта.
+// merchant_id заполняет Billing API из токена (7.x); события - каталог типов
+// контракта доставки openapi/webhooks.v1.yaml (CF-3), неизвестные типы
+// отклоняются INVALID_ARGUMENT.
+message RegisterWebhookEndpointRequest {
+  // IdempotencyKey задает ключ идемпотентности регистрации.
+  string idempotency_key = 1;
+  // MerchantID задает мерчанта-владельца эндпоинта.
+  string merchant_id = 2;
+  // URL задает https-адрес доставки (SSRF-проверки на стороне Notification).
+  string url = 3;
+  // Events задает типы событий из каталога CF-3; пустой список недопустим.
+  repeated string events = 4;
+}
+
+// RegisterWebhookEndpointResponse возвращает созданный эндпоинт.
+message RegisterWebhookEndpointResponse {
+  // EndpointID задает идентификатор эндпоинта.
+  string endpoint_id = 1;
+  // URL задает зарегистрированный адрес доставки.
+  string url = 2;
+  // Events задает принятые типы событий.
+  repeated string events = 3;
+  // SigningSecret задает секрет подписи; показывается один раз и не хранится
+  // в открытом виде после регистрации.
+  string signing_secret = 4;
+}
+
+// NotificationService управляет эндпоинтами доставки вебхуков мерчантов.
+// Служебный сервис для Billing API (7.x) и Back-office (12.x); наружу
+// публикуется только REST мерчанта/оператора.
+service NotificationService {
+  // RegisterWebhookEndpoint регистрирует эндпоинт и выдает секрет подписи.
+  rpc RegisterWebhookEndpoint(RegisterWebhookEndpointRequest) returns (RegisterWebhookEndpointResponse);
+}

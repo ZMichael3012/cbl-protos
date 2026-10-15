@@ -1,0 +1,237 @@
+openapi: 3.1.0
+info:
+  title: CBL Webhook Delivery (Notification -> merchant)
+  version: 1.0.0-cf3
+  description: >
+    Контракт доставки подписанных вебхуков мерчанту сервисом Notification.
+    Состав и схемы данных заморожены CF-3 (после заморозки - только
+    назад-совместимые уточнения); реализация - задачи 8.1 - 8.3, документация
+    мерчантам - 15.4. Регистрация URL и выдача секрета подписи -
+    POST /v1/webhook-endpoints (billing.v1.yaml, заморожен CF-2; секрет
+    показывается один раз).
+
+    Подпись: X-Billing-Signature: t=<unix-секунды>,v1=<hex HMAC-SHA256(secret,
+    t + "." + body)>, где body - сырое тело запроса, hex строчными буквами;
+    проверка выполняется по сырому телу, сравнение - постоянное по времени.
+    Секрет - не менее 32 случайных байт CSPRNG, не логируется и не попадает в
+    URL. Мерчант проверяет t в окне +/- 5 минут (защита от replay) и
+    дедуплицирует доставки по id тела, сверяя его с X-Billing-Event-Id, - все
+    повторы одной доставки несут неизменные id и X-Billing-Event-Id (меняется
+    только t). Неизвестный type мерчант обязан принять (2xx) и игнорировать:
+    каталог типов расширяется назад-совместимо.
+
+    Успех - любой ответ 2xx (3xx и иные не считаются успехом); тело ответа не
+    интерпретируется. Гарантия at-least-once: таймаут попытки 10 с, повторы по
+    расписанию 1 с, 5 с, 30 с, 2 мин, 15 мин, 1 ч; после исчерпания доставка
+    помечается failed, доступен ручной retry (8.3). Порядок доставки по одной
+    сущности не гарантируется: мерчант применяет события по данным.
+    Актуальное состояние сущности всегда доступно через REST мерчанта.
+webhooks:
+  merchantEvent:
+    post:
+      operationId: deliverMerchantEvent
+      summary: Событие платформы на зарегистрированный URL мерчанта
+      description: >
+        Тип события задается полем type; форма data - объект источника
+        (invoice, payout или refund) с полями из события-источника. Поля,
+        которых нет в событии (адрес, срок счета и т. п.), мерчант получает
+        через REST GET соответствующей сущности.
+      parameters:
+        - name: X-Billing-Signature
+          in: header
+          required: true
+          description: >
+            Схема t=<unix>,v1=<hex HMAC-SHA256(secret, t + "." + body)>,
+            hex строчными буквами
+          schema:
+            type: string
+            pattern: '^t=[0-9]+,v1=[0-9a-f]{64}$'
+        - name: X-Billing-Event-Id
+          in: header
+          required: true
+          description: >
+            Идентификатор события, равен полю id тела и неизменен при повторах
+          schema:
+            type: string
+            pattern: '^evt_[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookEvent'
+      responses:
+        '2XX':
+          description: Доставка принята; тело ответа не интерпретируется
+components:
+  schemas:
+    WebhookEvent:
+      oneOf:
+        - $ref: '#/components/schemas/InvoiceEvent'
+        - $ref: '#/components/schemas/PayoutEvent'
+        - $ref: '#/components/schemas/RefundEvent'
+      discriminator:
+        propertyName: type
+        mapping:
+          invoice.detected: '#/components/schemas/InvoiceEvent'
+          invoice.confirming: '#/components/schemas/InvoiceEvent'
+          invoice.completed: '#/components/schemas/InvoiceEvent'
+          invoice.expired: '#/components/schemas/InvoiceEvent'
+          invoice.underpaid: '#/components/schemas/InvoiceEvent'
+          invoice.overpaid: '#/components/schemas/InvoiceEvent'
+          invoice.failed: '#/components/schemas/InvoiceEvent'
+          payout.completed: '#/components/schemas/PayoutEvent'
+          payout.failed: '#/components/schemas/PayoutEvent'
+          refund.completed: '#/components/schemas/RefundEvent'
+          refund.failed: '#/components/schemas/RefundEvent'
+    EventEnvelope:
+      type: object
+      required: [id, type, created_at, data]
+      properties:
+        id:
+          type: string
+          pattern: '^evt_[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+          description: UUIDv7 события с префиксом evt_; неизменен при повторах
+        type:
+          type: string
+          description: Тип события из каталога CF-3
+        created_at:
+          type: string
+          format: date-time
+          description: Время возникновения события, RFC 3339, UTC
+        data:
+          type: object
+          description: Данные источника, форма зависит от type
+    Asset:
+      type: object
+      required: [amount, currency]
+      properties:
+        amount:
+          type: string
+          pattern: '^[0-9]+(\.[0-9]+)?$'
+          description: Строка-десятичное число в единицах актива, float запрещен
+        currency:
+          type: string
+          description: Код актива, например USDT
+    InvoiceEvent:
+      allOf:
+        - $ref: '#/components/schemas/EventEnvelope'
+        - type: object
+          properties:
+            type:
+              enum:
+                - invoice.detected
+                - invoice.confirming
+                - invoice.completed
+                - invoice.expired
+                - invoice.underpaid
+                - invoice.overpaid
+                - invoice.failed
+            data:
+              type: object
+              required: [invoice]
+              properties:
+                invoice:
+                  type: object
+                  required: [id, status]
+                  properties:
+                    id:
+                      type: string
+                      description: Идентификатор счета (payment_id)
+                    status:
+                      type: string
+                      description: Состояние счета, соответствующее типу события
+                    amount:
+                      $ref: '#/components/schemas/Asset'
+                    paid_amount:
+                      $ref: '#/components/schemas/Asset'
+                    fee:
+                      $ref: '#/components/schemas/Asset'
+                    rate:
+                      type: string
+                      description: Зафиксированный курс котировки
+                    txid:
+                      type: string
+                      description: Идентификатор транзакции в сети
+                    occurred_at:
+                      type: string
+                      format: date-time
+    PayoutEvent:
+      allOf:
+        - $ref: '#/components/schemas/EventEnvelope'
+        - type: object
+          properties:
+            type:
+              enum:
+                - payout.completed
+                - payout.failed
+            data:
+              type: object
+              required: [payout]
+              properties:
+                payout:
+                  type: object
+                  required: [id, status]
+                  properties:
+                    id:
+                      type: string
+                      description: Идентификатор выплаты
+                    status:
+                      type: string
+                      enum: [completed, failed, compensated, rejected]
+                      description: >
+                        Терминальное состояние, выводится из типа события:
+                        completed - completed; failed - failed, compensated
+                        или rejected (точное состояние в этом поле)
+                    amount:
+                      $ref: '#/components/schemas/Asset'
+                    fee:
+                      $ref: '#/components/schemas/Asset'
+                    txid:
+                      type: string
+                    failure_reason:
+                      type: string
+                      description: Причина отказа или компенсации
+                    occurred_at:
+                      type: string
+                      format: date-time
+    RefundEvent:
+      allOf:
+        - $ref: '#/components/schemas/EventEnvelope'
+        - type: object
+          properties:
+            type:
+              enum:
+                - refund.completed
+                - refund.failed
+            data:
+              type: object
+              required: [refund]
+              properties:
+                refund:
+                  type: object
+                  required: [id, status]
+                  properties:
+                    id:
+                      type: string
+                      description: Идентификатор выплаты-возврата (payout_id)
+                    invoice_id:
+                      type: string
+                      description: Исходный счет, по которому выполняется возврат
+                    status:
+                      type: string
+                      enum: [completed, failed, compensated, rejected]
+                      description: >
+                        Терминальное состояние выплаты-возврата, выводится из
+                        типа события (как у payout)
+                    amount:
+                      $ref: '#/components/schemas/Asset'
+                    fee:
+                      $ref: '#/components/schemas/Asset'
+                    txid:
+                      type: string
+                    failure_reason:
+                      type: string
+                    occurred_at:
+                      type: string
+                      format: date-time

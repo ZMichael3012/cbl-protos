@@ -15,9 +15,11 @@ OpenAPI мерчанта (7.1) и admin (12.1).
 
 Точки заморозки контрактов: CF-1 (Payment, Quote, Ledger, Connector, события gateway),
 CF-2 (`payment.events`, `ledger.events`, `payout.commands`, `gateway.payout.events`),
-CF-3 (Notification, Reporting, `recon.alerts`, Admin API). См. `CBL-004`.
+CF-3 (контракт вебхуков мерчанта, Reporting `Query` v1, `recon.alerts` v1, Admin API v1).
+См. `CBL-004`.
 Статус: CF-1 заморожен тегом `cbl-protos@cf-1` (13.10.2026), CF-2 - тегом
-`cbl-protos@cf-2` (15.10.2026, спека `.specs/CBL-CF2-freeze.md`); после заморозки
+`cbl-protos@cf-2` (15.10.2026, спека `.specs/CBL-CF2-freeze.md`), CF-3 - тегом
+`cbl-protos@cf-3` (15.10.2026, спека `.specs/CBL-CF3-freeze.md`); после заморозки
 выпускаются только назад-совместимые аддитивные поля (буква тега `cf-2.1`,
 CBL-10.6: `refund_invoice_id` в payout-контрактах).
 
@@ -31,8 +33,10 @@ CBL-10.6: `refund_invoice_id` в payout-контрактах).
 | `billing/connector/v1` | `cbl-connector`, `cbl-payment`, `cbl-payout`, `cbl-reconciler` |
 | `billing/payout/v1` | `cbl-payout`, `cbl-billing-api`, `cbl-backoffice` |
 | `billing/reporting/v1` | `cbl-reporting`, `cbl-billing-api` |
+| `billing/notification/v1` | `cbl-notification`, `cbl-billing-api` |
 | `billing/events/v1` | все продюсеры и консьюмеры Kafka (`CBL-003`, раздел 6) |
 | `openapi/billing.v1.yaml` | `cbl-billing-api`, `cbl-api-gateway` |
+| `openapi/webhooks.v1.yaml` | `cbl-notification`, мерчанты, `cbl-billing-api` |
 | `openapi/admin.v1.yaml` | `cbl-backoffice`, `cbl-api-gateway` |
 
 ## 3. Архитектура
@@ -61,7 +65,7 @@ cbl-protos/
 docker run --rm -v "%CD%":/w -w /w bufbuild/buf:1.47.2 lint
 
 # breaking против последней заморозки (см. Makefile)
-docker run --rm -v "%CD%":/w -w /w bufbuild/buf:1.47.2 breaking --against ".git#tag=cbl-protos@cf-2"
+docker run --rm -v "%CD%":/w -w /w bufbuild/buf:1.47.2 breaking --against ".git#tag=cbl-protos@cf-3"
 
 # генерация (нужны плагины в PATH: %USERPROFILE%\go\bin)
 go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.34.2
@@ -107,6 +111,7 @@ go build ./...
 | CBL-1.7 | 2026-10-13 | done (buf lint, generate, go build, emdash - зеленые; CF-1 заморожен) | `.specs/CBL-1.7-protos-and-contract-freeze.md` | 5c63b8b, тег `cbl-protos@cf-1` |
 | CBL-CF2 | 2026-10-15 | done (верификация схем против W1, buf lint/breaking против cf-1, generate без диффа; заморозка CF-2) | `.specs/CBL-CF2-freeze.md` | тег `cbl-protos@cf-2` |
 | CBL-10.6 | 2026-10-15 | done (аддитивные refund_invoice_id: CreatePayoutRequest=7, Payout=12, PayoutEvent=11; buf lint/breaking против cf-2 зеленые; тег cf-2.1) | `.specs/CBL-10.6-refund-fields.md` | 5b3d1e0 |
+| CBL-CF3 | 2026-10-15 | done (webhooks.v1.yaml - каталог с invoice.failed, самодостаточные схемы данных, подпись, повторы; новый billing/notification/v1; Admin API v1 - ревизия routing, субъект из токена; Reporting Query v1 - комментарии; recon.alerts v1 + merchant_id; аддитивный PAYOUT_EVENT_TYPE_REJECTED; buf lint/breaking против cf-2.1, generate, build зеленые; заморозка CF-3) | `.specs/CBL-CF3-freeze.md` | тег `cbl-protos@cf-3` |
 
 ## 9. Runbook
 

@@ -24,6 +24,8 @@ enum PayoutEventType {
   PAYOUT_EVENT_TYPE_COMPLETED = 3;
   PAYOUT_EVENT_TYPE_FAILED = 4;
   PAYOUT_EVENT_TYPE_COMPENSATED = 5;
+  // Rejected задает вето оператора на выплату (10.5, аддитивно CF-3).
+  PAYOUT_EVENT_TYPE_REJECTED = 6;
 }
 
 // PayoutEvent описывает событие выплаты для топика payout.events.

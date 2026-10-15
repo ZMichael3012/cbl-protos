@@ -7,28 +7,49 @@ import "google/protobuf/timestamp.proto";
 option go_package = "github.com/cbl/cbl-protos/gen/go/billing/reporting/v1;reportingv1";
 
 // QueryRequest описывает запрос отчета из ClickHouse.
+// merchant_id заполняет Billing API из токена мерчанта (11.4), а не из
+// пользовательского запроса; прямые gRPC-вызовы внутренние. period_from и
+// period_to задают период в UTC (границы включаются), незаданные значения -
+// без ограничения. cursor непрозрачен для вызывающего и берется из
+// next_cursor предыдущей страницы.
 message QueryRequest {
+  // ReportType задает идентификатор отчета из каталога 11.4/15.4.
   string report_type = 1;
+  // MerchantID задает мерчанта-владельца данных (из токена при проксировании).
   string merchant_id = 2;
+  // PeriodFrom задает начало периода в UTC включительно.
   google.protobuf.Timestamp period_from = 3;
+  // PeriodTo задает конец периода в UTC включительно.
   google.protobuf.Timestamp period_to = 4;
+  // GroupBy задает измерение группировки строк отчета.
   string group_by = 5;
+  // Limit задает размер страницы; 0 - серверный дефолт 20 (как Limit в
+  // billing.v1.yaml), максимум 100.
   uint32 limit = 6;
+  // Cursor задает непрозрачный курсор продолжения.
   string cursor = 7;
 }
 
 // ReportRow описывает строку отчета: деньги и суммы передаются строками.
 message ReportRow {
+  // Values задает значения колонок строки; все значения - строки,
+  // денежные суммы и курсы - десятичные строки канонического вида
+  // ^-?(0|[1-9][0-9]*)(\.[0-9]+)?$ (без экспоненты, float запрещен).
   map<string, string> values = 1;
 }
 
 // QueryResponse возвращает страницу отчета.
 message QueryResponse {
+  // Rows задает строки текущей страницы.
   repeated ReportRow rows = 1;
+  // NextCursor задает курсор следующей страницы; пусто - конец отчета.
   string next_cursor = 2;
 }
 
-// ReportingService отдает отчеты по данным ClickHouse.
+// ReportingService отдает отчеты по данным ClickHouse (дедлайн RPC 5 с,
+// CBL-003 раздел 5); сервис только читает ClickHouse и не участвует
+// в денежном контуре.
 service ReportingService {
+  // Query возвращает страницу отчета.
   rpc Query(QueryRequest) returns (QueryResponse);
 }

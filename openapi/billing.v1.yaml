@@ -483,10 +483,12 @@ components:
           type: string
     RefundCreateRequest:
       type: object
+      additionalProperties: false
       required: [invoice_id, amount, destination_address]
       properties:
         invoice_id:
           type: string
+          description: Исходный счет, по которому выполняется возврат
         amount:
           $ref: '#/components/schemas/Money'
         destination_address:
@@ -496,8 +498,10 @@ components:
       properties:
         id:
           type: string
+          description: Идентификатор выплаты-возврата
         invoice_id:
           type: string
+          description: Исходный счет, по которому выполняется возврат
         status:
           $ref: '#/components/schemas/PayoutState'
         amount:
@@ -560,16 +564,42 @@ components:
           type: string
     WebhookEndpointRequest:
       type: object
+      additionalProperties: false
       required: [url, events]
       properties:
         url:
           type: string
           format: uri
-          description: Только https, SSRF-защита на стороне платформы
+          pattern: '^https://[^@]+$'
+          maxLength: 2048
+          description: >
+            Только https без userinfo и IP-литералов; SSRF-защита платформы:
+            блокировка private/loopback/link-local/metadata-диапазонов после
+            DNS-резолвинга на момент подключения, без следования redirect-ам
         events:
           type: array
+          minItems: 1
+          maxItems: 32
+          uniqueItems: true
           items:
             type: string
+            enum:
+              - invoice.detected
+              - invoice.confirming
+              - invoice.completed
+              - invoice.expired
+              - invoice.underpaid
+              - invoice.overpaid
+              - invoice.failed
+              - payout.completed
+              - payout.failed
+              - refund.completed
+              - refund.failed
+          description: >
+            Типы из каталога CF-3 (openapi/webhooks.v1.yaml): доставка
+            фильтруется по списку, неизвестный тип - 422. Новые типы каталога
+            добавляются назад-совместимо (cf-N.x) и не включаются в подписку
+            автоматически - требуется повторная регистрация
     WebhookEndpointResponse:
       type: object
       properties:
@@ -583,4 +613,6 @@ components:
             type: string
         signing_secret:
           type: string
-          description: Показывается один раз при регистрации
+          description: >
+            Показывается один раз при регистрации; не менее 32 случайных байт
+            CSPRNG, не логируется и не попадает в URL

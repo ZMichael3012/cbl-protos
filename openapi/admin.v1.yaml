@@ -4,8 +4,10 @@ info:
   version: 1.0.0-draft
   description: >
     Admin API платформы CBL для операторов: утверждение выплат, маршрутизация
-    провайдеров, работа с расхождениями. RBAC и аудит на стороне cbl-backoffice.
-    Черновик CF-3, финализируется задачей 12.1.
+    провайдеров, работа с расхождениями. Аутентификация - bearer-токен
+    оператора, RBAC и аудит на стороне cbl-backoffice (12.1): каждое действие
+    пишет запись аудит-лога (кто, что, до/после). Состав маршрутов заморожен
+    CF-3, финализируется задачей 12.1.
 servers:
   - url: https://admin.example.com/admin/v1
 tags:
@@ -20,7 +22,13 @@ paths:
     post:
       tags: [payouts]
       operationId: approvePayout
-      summary: Подтвердить крупную выплату (по порогу, двумя операторами)
+      summary: Подтвердить крупную выплату (по политике порогов, по умолчанию двумя операторами)
+      description: >
+        Число голосов - по политике порогов апрува (по умолчанию два разных
+        оператора); повторный голос того же оператора - 409 (голос неизменяем).
+        Субъект действия выводится из bearer-токена: оператор в токене и
+        operator_id тела обязаны совпадать, иначе 403; аудит ведется по
+        субъекту токена.
       parameters:
         - $ref: '#/components/parameters/PayoutID'
       requestBody:
@@ -36,6 +44,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PayoutAdmin'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/Problem'
         '409':
           $ref: '#/components/responses/Problem'
   /payouts/{id}/reject:
@@ -43,6 +59,11 @@ paths:
       tags: [payouts]
       operationId: rejectPayout
       summary: Отклонить крупную выплату
+      description: >
+        Вето: одного отклонения достаточно для перехода выплаты в rejected;
+        поле reason обязательно и непусто. Субъект действия выводится из
+        bearer-токена: оператор в токене и operator_id тела обязаны совпадать,
+        иначе 403.
       parameters:
         - $ref: '#/components/parameters/PayoutID'
       requestBody:
@@ -58,6 +79,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PayoutAdmin'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/Problem'
         '409':
           $ref: '#/components/responses/Problem'
   /routing-rules:
@@ -67,34 +96,49 @@ paths:
       summary: Правила маршрутизации провайдеров
       responses:
         '200':
-          description: Список правил
+          description: Текущая ревизия правил
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  items:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/RoutingRule'
+                $ref: '#/components/schemas/RoutingRuleSet'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
     put:
       tags: [routing]
       operationId: putRoutingRules
-      summary: Заменить правила маршрутизации
+      summary: Заменить правила маршрутизации (полное замещение ревизии)
+      description: >
+        Замещает набор правил целиком. revision - ревизия, полученная из
+        последнего GET; при несовпадении с текущей - 409 (защита от гонки двух
+        операторов). Требуется отдельная RBAC-роль управления маршрутизацией
+        (12.1): право апрува выплат не дает права менять маршруты. Применение
+        асинхронное: кеш маршрутизации Connector обновляется в течение 30 - 60 с
+        (CBL-003 раздел 7).
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                items:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/RoutingRule'
+              $ref: '#/components/schemas/RoutingRuleSet'
       responses:
         '200':
-          description: Правила сохранены
+          description: Новая ревизия правил сохранена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoutingRuleSet'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Problem'
+        '422':
+          $ref: '#/components/responses/Problem'
   /reconciliation/discrepancies:
     get:
       tags: [reconciliation]
@@ -106,6 +150,11 @@ paths:
           schema:
             type: string
             enum: [info, warning, critical]
+        - name: merchant_id
+          in: query
+          schema:
+            type: string
+          description: Фильтр по мерчанту (пусто - системные и все прочие)
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/Cursor'
       responses:
@@ -122,11 +171,20 @@ paths:
                       $ref: '#/components/schemas/Discrepancy'
                   next_cursor:
                     type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /reconciliation/discrepancies/{id}/resolve:
     post:
       tags: [reconciliation]
       operationId: resolveDiscrepancy
       summary: Разрешить расхождение вручную
+      description: >
+        Повторное разрешение уже разрешенного расхождения - 409. Субъект
+        действия выводится из bearer-токена: оператор в токене и operator_id
+        тела обязаны совпадать, иначе 403. Исполнение ручных корректировок
+        (manual_adjustment) - 12.3.
       parameters:
         - name: id
           in: path
@@ -146,11 +204,24 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Discrepancy'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/Problem'
+        '409':
+          $ref: '#/components/responses/Problem'
   /providers/{id}/disable:
     post:
       tags: [providers]
       operationId: disableProvider
       summary: Отключить провайдера вручную
+      description: >
+        Повторное отключение уже отключенного провайдера идемпотентно: 204 без
+        новой записи аудита. Причина опциональна.
       parameters:
         - name: id
           in: path
@@ -162,12 +233,21 @@ paths:
           application/json:
             schema:
               type: object
+              additionalProperties: false
               properties:
                 reason:
                   type: string
       responses:
         '204':
           description: Провайдер отключен
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/Problem'
 components:
   securitySchemes:
     bearerAuth:
@@ -201,6 +281,24 @@ components:
         application/problem+json:
           schema:
             $ref: '#/components/schemas/Problem'
+    BadRequest:
+      description: Ошибка формата запроса (application/problem+json, RFC 9457)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Unauthorized:
+      description: Отсутствует или недействителен токен оператора
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Forbidden:
+      description: Недостаточно прав RBAC для действия
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
   schemas:
     Problem:
       type: object
@@ -221,11 +319,17 @@ components:
           type: string
     PayoutDecisionRequest:
       type: object
+      additionalProperties: false
+      required: [operator_id]
       properties:
         operator_id:
           type: string
+          description: >
+            Идентификатор оператора, голосующего за решение; обязан совпадать с
+            субъектом bearer-токена, иначе 403 (аудит - по субъекту токена)
         reason:
           type: string
+          description: Обязателен и непуст для reject (иначе 422)
     PayoutAdmin:
       type: object
       properties:
@@ -238,11 +342,33 @@ components:
           items:
             type: string
         amount:
-          type: string
+          $ref: '#/components/schemas/Money'
         currency:
           type: string
+    Money:
+      type: string
+      pattern: '^[0-9]+(\.[0-9]+)?$'
+      description: Строка-десятичное число в единицах актива, float запрещен
+    RoutingRuleSet:
+      type: object
+      additionalProperties: false
+      required: [revision, items]
+      properties:
+        revision:
+          type: integer
+          format: int64
+          description: >
+            Ревизия набора; при PUT - полученная из последнего GET, иначе 409
+        items:
+          type: array
+          minItems: 1
+          maxItems: 1000
+          items:
+            $ref: '#/components/schemas/RoutingRule'
     RoutingRule:
       type: object
+      additionalProperties: false
+      required: [network, asset, provider, priority, enabled]
       properties:
         network:
           type: string
@@ -252,12 +378,14 @@ components:
           type: string
         priority:
           type: integer
+          minimum: 0
         weight:
           type: integer
+          minimum: 0
         min_amount:
-          type: string
+          $ref: '#/components/schemas/Money'
         max_amount:
-          type: string
+          $ref: '#/components/schemas/Money'
         enabled:
           type: boolean
     Discrepancy:
@@ -270,6 +398,10 @@ components:
           enum: [missing_in_ledger, amount_mismatch, status_mismatch]
         ref_id:
           type: string
+          description: Идентификатор сущности расхождения (payment_id/payout_id)
+        merchant_id:
+          type: string
+          description: Мерчант-владелец расхождения; пусто для системных
         severity:
           type: string
           enum: [info, warning, critical]
@@ -285,9 +417,14 @@ components:
           format: date-time
     DiscrepancyResolveRequest:
       type: object
+      additionalProperties: false
+      required: [operator_id, resolution]
       properties:
         operator_id:
           type: string
+          description: >
+            Идентификатор оператора; обязан совпадать с субъектом bearer-токена,
+            иначе 403 (аудит - по субъекту токена)
         resolution:
           type: string
           enum: [confirm_platform, confirm_gateway, manual_adjustment]

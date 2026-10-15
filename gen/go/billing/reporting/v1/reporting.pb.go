@@ -22,18 +22,31 @@ const (
 )
 
 // QueryRequest описывает запрос отчета из ClickHouse.
+// merchant_id заполняет Billing API из токена мерчанта (11.4), а не из
+// пользовательского запроса; прямые gRPC-вызовы внутренние. period_from и
+// period_to задают период в UTC (границы включаются), незаданные значения -
+// без ограничения. cursor непрозрачен для вызывающего и берется из
+// next_cursor предыдущей страницы.
 type QueryRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	ReportType string                 `protobuf:"bytes,1,opt,name=report_type,json=reportType,proto3" json:"report_type,omitempty"`
-	MerchantId string                 `protobuf:"bytes,2,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`
+	// ReportType задает идентификатор отчета из каталога 11.4/15.4.
+	ReportType string `protobuf:"bytes,1,opt,name=report_type,json=reportType,proto3" json:"report_type,omitempty"`
+	// MerchantID задает мерчанта-владельца данных (из токена при проксировании).
+	MerchantId string `protobuf:"bytes,2,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`
+	// PeriodFrom задает начало периода в UTC включительно.
 	PeriodFrom *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=period_from,json=periodFrom,proto3" json:"period_from,omitempty"`
-	PeriodTo   *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=period_to,json=periodTo,proto3" json:"period_to,omitempty"`
-	GroupBy    string                 `protobuf:"bytes,5,opt,name=group_by,json=groupBy,proto3" json:"group_by,omitempty"`
-	Limit      uint32                 `protobuf:"varint,6,opt,name=limit,proto3" json:"limit,omitempty"`
-	Cursor     string                 `protobuf:"bytes,7,opt,name=cursor,proto3" json:"cursor,omitempty"`
+	// PeriodTo задает конец периода в UTC включительно.
+	PeriodTo *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=period_to,json=periodTo,proto3" json:"period_to,omitempty"`
+	// GroupBy задает измерение группировки строк отчета.
+	GroupBy string `protobuf:"bytes,5,opt,name=group_by,json=groupBy,proto3" json:"group_by,omitempty"`
+	// Limit задает размер страницы; 0 - серверный дефолт 20 (как Limit в
+	// billing.v1.yaml), максимум 100.
+	Limit uint32 `protobuf:"varint,6,opt,name=limit,proto3" json:"limit,omitempty"`
+	// Cursor задает непрозрачный курсор продолжения.
+	Cursor string `protobuf:"bytes,7,opt,name=cursor,proto3" json:"cursor,omitempty"`
 }
 
 func (x *QueryRequest) Reset() {
@@ -123,6 +136,9 @@ type ReportRow struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	// Values задает значения колонок строки; все значения - строки,
+	// денежные суммы и курсы - десятичные строки канонического вида
+	// ^-?(0|[1-9][0-9]*)(\.[0-9]+)?$ (без экспоненты, float запрещен).
 	Values map[string]string `protobuf:"bytes,1,rep,name=values,proto3" json:"values,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 }
 
@@ -171,8 +187,10 @@ type QueryResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Rows       []*ReportRow `protobuf:"bytes,1,rep,name=rows,proto3" json:"rows,omitempty"`
-	NextCursor string       `protobuf:"bytes,2,opt,name=next_cursor,json=nextCursor,proto3" json:"next_cursor,omitempty"`
+	// Rows задает строки текущей страницы.
+	Rows []*ReportRow `protobuf:"bytes,1,rep,name=rows,proto3" json:"rows,omitempty"`
+	// NextCursor задает курсор следующей страницы; пусто - конец отчета.
+	NextCursor string `protobuf:"bytes,2,opt,name=next_cursor,json=nextCursor,proto3" json:"next_cursor,omitempty"`
 }
 
 func (x *QueryResponse) Reset() {
