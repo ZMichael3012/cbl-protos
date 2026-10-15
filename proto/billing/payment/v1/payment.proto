@@ -30,7 +30,10 @@ message TimelineItem {
   string comment = 3;
 }
 
-// Payment описывает платеж и его текущее состояние.
+// Payment описывает платеж и его текущее состояние. expected_amount несет
+// сумму и актив оплаты: REST-поля мерчант-инвойса pay_amount/pay_asset
+// выводятся из него; rate и locked_until описывают зафиксированную котировку
+// курса (заполняются 4.2 в creating/created; REST quote{rate, locked_until}).
 message Payment {
   string payment_id = 1;
   string merchant_id = 2;
@@ -44,6 +47,10 @@ message Payment {
   google.protobuf.Timestamp created_at = 10;
   google.protobuf.Timestamp expires_at = 11;
   repeated TimelineItem timeline = 12;
+  // Rate задает зафиксированный курс десятичной строкой (аддитивно cf-3.3).
+  string rate = 13;
+  // LockedUntil задает срок фиксации котировки (аддитивно cf-3.3).
+  google.protobuf.Timestamp locked_until = 14;
 }
 
 // CreatePaymentRequest создает платеж с фиксацией котировки курса.
@@ -63,6 +70,10 @@ message CreatePaymentResponse {
   string pay_address = 3;
   string quote_id = 4;
   google.protobuf.Timestamp expires_at = 5;
+  // Rate задает зафиксированный курс десятичной строкой (аддитивно cf-3.3).
+  string rate = 6;
+  // LockedUntil задает срок фиксации котировки (аддитивно cf-3.3).
+  google.protobuf.Timestamp locked_until = 7;
 }
 
 // GetPaymentRequest запрашивает платеж по идентификатору.
@@ -76,11 +87,19 @@ message GetPaymentResponse {
 }
 
 // ListPaymentsRequest запрашивает страницу платежей с курсорной пагинацией.
+// merchant_id обязателен (владелец из токена); created_from и created_to
+// фильтруют по времени создания (from включительно, to исключительно,
+// незаданные границы не ограничивают); cursor - payment_id последней записи
+// предыдущей страницы (порядок created_at DESC, id DESC).
 message ListPaymentsRequest {
   string merchant_id = 1;
   PaymentState state_filter = 2;
   uint32 limit = 3;
   string cursor = 4;
+  // CreatedFrom задает нижнюю границу периода включительно (аддитивно cf-3.3).
+  google.protobuf.Timestamp created_from = 5;
+  // CreatedTo задает верхнюю границу периода исключительно (аддитивно cf-3.3).
+  google.protobuf.Timestamp created_to = 6;
 }
 
 // ListPaymentsResponse возвращает страницу платежей.
