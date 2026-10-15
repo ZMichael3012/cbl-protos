@@ -1,12 +1,22 @@
 openapi: 3.1.0
 info:
   title: CBL Billing API
-  version: 1.0.0-draft
+  version: 1.0.0
   description: >
-    Мерчант API платформы крипто-биллинга CBL. Черновик CF-2 (состав маршрутов
-    заморожен), финализируется
-    задачей 7.1. Деньги передаются строкой-десятичным числом плюс код актива,
-    float запрещен. Все мутирующие вызовы требуют заголовок Idempotency-Key.
+    Мерчант API платформы крипто-биллинга CBL. Финальная версия 1.0.0 (задача
+    7.1; черновик заморожен CF-2, webhook-части уточнены CF-3; тег
+    cbl-protos@cf-3.1). После финализации изменения только назад-совместимые
+    (CBL-003, раздел 8), ломающие - /v2 и новая волна.
+
+    Деньги передаются строкой-десятичным числом плюс код актива, float
+    запрещен. Все мутирующие вызовы требуют заголовок Idempotency-Key: ключ
+    скоупится мерчантом из токена, повтор с тем же телом возвращает исходный
+    ответ (Idempotent-Replayed: true), тот же ключ с другим телом - 409
+    idempotency_key_reuse. Отпечаток запроса - метод, путь и хэш сырого тела;
+    кэшируются только успешные ответы (ошибки ключ не занимают); окно хранения
+    - 24 часа (CBL-003, раздел 7). Все ресурсы скоупятся мерчантом из
+    bearer-токена: merchant_id в запросах не принимается. Ошибки -
+    application/problem+json (RFC 9457); 429 и 503 несут Retry-After.
 servers:
   - url: https://billing.example.com/v1
     description: Периметр (API Gateway)
@@ -36,23 +46,32 @@ paths:
               $ref: '#/components/schemas/InvoiceCreateRequest'
       responses:
         '201':
-          description: Счет создан
+          description: >
+            Счет создан; при повторе идемпотентного ключа - исходный ответ.
+            Статус может быть creating (котировка фиксируется, адрес ожидается):
+            поля pay_address, pay_amount и quote заполняются асинхронно,
+            мерчант опрашивает GET /invoices/{id}
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Invoice'
         '400':
-          $ref: '#/components/responses/Problem'
+          $ref: '#/components/responses/BadRequest'
         '401':
-          $ref: '#/components/responses/Problem'
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '409':
-          $ref: '#/components/responses/Problem'
+          $ref: '#/components/responses/Conflict'
         '422':
-          $ref: '#/components/responses/Problem'
+          $ref: '#/components/responses/Unprocessable'
         '429':
-          $ref: '#/components/responses/Problem'
+          $ref: '#/components/responses/RateLimited'
         '503':
-          $ref: '#/components/responses/Problem'
+          $ref: '#/components/responses/ServiceUnavailable'
     get:
       tags: [invoices]
       operationId: listInvoices
@@ -76,6 +95,7 @@ paths:
           in: query
           schema:
             type: string
+            maxLength: 128
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/Cursor'
       responses:
@@ -85,15 +105,23 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/InvoiceList'
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '401':
-          $ref: '#/components/responses/Problem'
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /invoices/{id}:
     get:
       tags: [invoices]
       operationId: getInvoice
       summary: Статус счета
       parameters:
-        - $ref: '#/components/parameters/InvoiceID'
+        - $ref: '#/components/parameters/ResourceID'
       responses:
         '200':
           description: Счет
@@ -101,27 +129,51 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Invoice'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
-          $ref: '#/components/responses/Problem'
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /invoices/{id}/cancel:
     post:
       tags: [invoices]
       operationId: cancelInvoice
       summary: Отменить счет до обнаружения оплаты
+      description: >
+        Пустое тело. 409 (invoice_not_cancellable), если счет уже detected или
+        терминален. Повтор с тем же Idempotency-Key - исходный ответ.
       parameters:
-        - $ref: '#/components/parameters/InvoiceID'
+        - $ref: '#/components/parameters/ResourceID'
         - $ref: '#/components/parameters/IdempotencyKey'
       responses:
         '200':
           description: Счет отменен
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Invoice'
-        '409':
-          $ref: '#/components/responses/Problem'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
-          $ref: '#/components/responses/Problem'
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /payouts:
     post:
       tags: [payouts]
@@ -138,25 +190,34 @@ paths:
       responses:
         '201':
           description: Выплата создана
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Payout'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '409':
-          $ref: '#/components/responses/Problem'
+          $ref: '#/components/responses/Conflict'
         '422':
-          $ref: '#/components/responses/Problem'
+          $ref: '#/components/responses/Unprocessable'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /payouts/{id}:
     get:
       tags: [payouts]
       operationId: getPayout
       summary: Статус выплаты
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
+        - $ref: '#/components/parameters/ResourceID'
       responses:
         '200':
           description: Выплата
@@ -164,13 +225,25 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Payout'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
-          $ref: '#/components/responses/Problem'
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /refunds:
     post:
       tags: [refunds]
       operationId: createRefund
       summary: Создать возврат по подтвержденному счету
+      description: >
+        Исполняется выплатой-возвратом (Payout с маркером refund_invoice_id,
+        CBL-10.6); статус возврата читается через GET /payouts/{id} с id
+        возврата.
       parameters:
         - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
@@ -182,14 +255,29 @@ paths:
       responses:
         '201':
           description: Возврат создан
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Refund'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '409':
-          $ref: '#/components/responses/Problem'
+          $ref: '#/components/responses/Conflict'
         '422':
-          $ref: '#/components/responses/Problem'
+          $ref: '#/components/responses/Unprocessable'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /balances:
     get:
       tags: [balances]
@@ -202,6 +290,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/BalanceList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /ledger/entries:
     get:
       tags: [ledger]
@@ -212,9 +308,22 @@ paths:
           in: query
           schema:
             type: string
+            pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
           description: >
             Счет в рамках мерчанта из токена; серверная проверка владельца
-            обязательна (7.4), account_id детерминирован и не является секретом.
+            обязательна (7.4; требуется аддитивное расширение Ledger, задача
+            2.10), чужой или неизвестный счет - 404, account_id детерминирован
+            и не является секретом. Не задан - все счета мерчанта
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date-time
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/Cursor'
       responses:
@@ -224,6 +333,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/LedgerEntryList'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /reports/{report_type}:
     get:
       tags: [reports]
@@ -235,6 +356,9 @@ paths:
           required: true
           schema:
             type: string
+          description: >
+            Тип отчета из каталога 11.4 (аддитивен); неизвестный тип - 404
+            unknown_report_type
         - name: period_from
           in: query
           schema:
@@ -249,6 +373,10 @@ paths:
           in: query
           schema:
             type: string
+            maxLength: 64
+          description: >
+            Измерение группировки из whitelist каталога 11.4; сервер обязан
+            использовать только параметризованные запросы ClickHouse
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/Cursor'
       responses:
@@ -258,11 +386,27 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ReportPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /webhook-endpoints:
     post:
       tags: [webhooks]
       operationId: registerWebhookEndpoint
       summary: Зарегистрировать URL вебхуков (секрет показывается один раз)
+      description: >
+        Повторная регистрация URL, уже активного у мерчанта, - 409
+        webhook_endpoint_exists. Повтор запроса с тем же Idempotency-Key -
+        исходный ответ (включая signing_secret).
       parameters:
         - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
@@ -274,16 +418,36 @@ paths:
       responses:
         '201':
           description: Эндпоинт зарегистрирован
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/WebhookEndpointResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/Unprocessable'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
 components:
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
-      description: API-ключ мерчанта
+      description: >
+        API-ключ мерчанта; выдача, ротация и отзыв - вне мерчант-API (7.2, 12.x).
+        Ключ проверяется на периметре (API Gateway) и повторно в BFF; все
+        ресурсы скоупятся субъектом токена
   parameters:
     IdempotencyKey:
       name: Idempotency-Key
@@ -291,13 +455,23 @@ components:
       required: true
       schema:
         type: string
+        minLength: 8
         maxLength: 128
-    InvoiceID:
+        pattern: '^[A-Za-z0-9._~-]+$'
+      description: >
+        Ключ идемпотентности запроса; скоупится мерчантом из токена. Отпечаток -
+        метод, путь и хэш сырого тела; повтор с тем же отпечатком возвращает
+        исходный ответ (Idempotent-Replayed), тот же ключ с другим отпечатком -
+        409 idempotency_key_reuse. Кэшируются только успешные ответы; окно
+        хранения 24 часа
+    ResourceID:
       name: id
       in: path
       required: true
       schema:
         type: string
+        pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+      description: Идентификатор ресурса (UUIDv7)
     Limit:
       name: limit
       in: query
@@ -311,9 +485,87 @@ components:
       in: query
       schema:
         type: string
+        maxLength: 512
+  headers:
+    IdempotentReplayed:
+      description: >
+        Признак повторной выдачи ранее сохраненного ответа; на первом успешном
+        ответе заголовка нет
+      schema:
+        type: string
+        enum: ["true"]
+    RetryAfter:
+      description: Секунды до повторной попытки
+      schema:
+        type: integer
+        minimum: 1
   responses:
-    Problem:
-      description: Ошибка в формате application/problem+json (RFC 9457)
+    BadRequest:
+      description: Ошибка формата запроса (problem+json, RFC 9457)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Unauthorized:
+      description: Отсутствует или недействителен API-ключ мерчанта
+      headers:
+        WWW-Authenticate:
+          description: Схема аутентификации (RFC 6750)
+          schema:
+            type: string
+            enum: ['Bearer realm="billing"']
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Forbidden:
+      description: Действие запрещено для мерчанта (например, suspended)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    NotFound:
+      description: >
+        Ресурс не найден или не принадлежит мерчанту (чужие идентификаторы не
+        раскрываются)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Conflict:
+      description: >
+        Конфликт состояния или ключа идемпотентности (коды
+        idempotency_key_reuse, invoice_not_cancellable,
+        webhook_endpoint_exists и другие)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Unprocessable:
+      description: >
+        Бизнес-валидация (недостаточно средств, счет не completed, неизвестный
+        тип события и другие; code уточняет причину)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    RateLimited:
+      description: Превышен лимит запросов мерчанта
+      headers:
+        Retry-After:
+          $ref: '#/components/headers/RetryAfter'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    ServiceUnavailable:
+      description: >
+        Временная недоступность зависимости; code уточняет: provider_unavailable
+        (внешний шлюз) или service_unavailable (внутренний сервис: Payment,
+        Ledger, Payout, Reporting, Notification)
+      headers:
+        Retry-After:
+          $ref: '#/components/headers/RetryAfter'
       content:
         application/problem+json:
           schema:
@@ -321,7 +573,7 @@ components:
   schemas:
     Problem:
       type: object
-      required: [type, title, status]
+      required: [type, title, status, code, request_id]
       properties:
         type:
           type: string
@@ -332,14 +584,24 @@ components:
           type: integer
         code:
           type: string
-          description: Машиночитаемый код, например idempotency_key_reuse
+          description: >
+            Машиночитаемый код причины: idempotency_key_reuse,
+            invoice_not_cancellable, webhook_endpoint_exists,
+            unknown_report_type, insufficient_funds, validation_failed,
+            provider_unavailable, service_unavailable, rate_limited; перечень
+            аддитивен
         detail:
           type: string
+          description: >
+            Человекочитаемое пояснение; не содержит секретов, персональных
+            данных и внутренних деталей, для корреляции используется request_id
         request_id:
           type: string
+          description: Идентификатор запроса для корреляции с логами и трассировкой
     Money:
       type: string
       pattern: '^[0-9]+(\.[0-9]+)?$'
+      maxLength: 40
       description: >
         Строка-десятичное число в единицах актива, float запрещен;
         неотрицательное, для сумм операций серверная валидация требует больше нуля
@@ -355,14 +617,19 @@ components:
           examples: [USDT]
     Quote:
       type: object
+      required: [rate, locked_until]
       properties:
         rate:
           type: string
+          pattern: '^[0-9]+(\.[0-9]+)?$'
+          maxLength: 40
+          description: Курс котировки десятичной строкой (без экспоненты)
         locked_until:
           type: string
           format: date-time
     TimelineItem:
       type: object
+      required: [state, occurred_at]
       properties:
         state:
           $ref: '#/components/schemas/InvoiceStatus'
@@ -371,12 +638,17 @@ components:
           format: date-time
     InvoiceStatus:
       type: string
-      enum: [creating, created, pending, detected, confirming, completed, expired, underpaid, overpaid, failed, cancelled]
+      x-extensible-enum: [creating, created, pending, detected, confirming, completed, expired, underpaid, overpaid, failed, cancelled]
+      description: >
+        Состояние счета; перечень расширяемый - клиент обязан корректно
+        обрабатывать неизвестные значения (например, отображать как есть)
     Invoice:
       type: object
+      required: [id, status]
       properties:
         id:
           type: string
+          description: Идентификатор счета (UUIDv7)
         merchant_order_id:
           type: string
         status:
@@ -413,28 +685,39 @@ components:
             type: string
     InvoiceCreateRequest:
       type: object
+      additionalProperties: false
       required: [merchant_order_id, amount, currency, pay_currency, network]
       properties:
         merchant_order_id:
           type: string
+          maxLength: 128
         amount:
           $ref: '#/components/schemas/Money'
         currency:
           type: string
+          description: Валюта счета (фиат или актив)
         pay_currency:
           type: string
+          description: Актив оплаты из возможностей шлюза
         network:
           type: string
+          description: Сеть оплаты (например trc20, erc20)
         expires_in_sec:
           type: integer
           minimum: 60
           maximum: 86400
+          description: Срок действия счета; не задан - 900 секунд (15 минут)
         metadata:
           type: object
+          maxProperties: 32
+          propertyNames:
+            maxLength: 64
           additionalProperties:
             type: string
+            maxLength: 512
     InvoiceList:
       type: object
+      required: [items]
       properties:
         items:
           type: array
@@ -444,12 +727,17 @@ components:
           type: string
     PayoutState:
       type: string
-      enum: [requested, approved, reserved, sent_to_gateway, completed, failed, compensated, rejected]
+      x-extensible-enum: [requested, approved, reserved, sent_to_gateway, completed, failed, compensated, rejected]
+      description: >
+        Состояние выплаты; перечень расширяемый - клиент обязан корректно
+        обрабатывать неизвестные значения
     Payout:
       type: object
+      required: [id, status]
       properties:
         id:
           type: string
+          description: Идентификатор выплаты (UUIDv7)
         status:
           $ref: '#/components/schemas/PayoutState'
         amount:
@@ -464,11 +752,17 @@ components:
           type: string
         failure_reason:
           type: string
+        invoice_id:
+          type: string
+          description: >
+            Исходный счет возврата; заполнен только для выплат-возвратов
+            (refund_invoice_id), пусто для обычных выплат
         created_at:
           type: string
           format: date-time
     PayoutCreateRequest:
       type: object
+      additionalProperties: false
       required: [amount, currency, network, destination_address]
       properties:
         amount:
@@ -479,8 +773,11 @@ components:
           type: string
         destination_address:
           type: string
+          description: Адрес получателя в указанной сети
         merchant_ref:
           type: string
+          pattern: '^[A-Za-z0-9_-]{1,128}$'
+          description: Бизнес-ключ плана счетов мерчанта (CBL-003, раздел 9)
     RefundCreateRequest:
       type: object
       additionalProperties: false
@@ -488,13 +785,21 @@ components:
       properties:
         invoice_id:
           type: string
+          pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
           description: Исходный счет, по которому выполняется возврат
         amount:
           $ref: '#/components/schemas/Money'
         destination_address:
           type: string
+        currency:
+          type: string
+          description: Актив возврата; не задан - выводится из исходного счета (7.4)
+        network:
+          type: string
+          description: Сеть возврата; не задана - выводится из исходного счета (7.4)
     Refund:
       type: object
+      required: [id, status]
       properties:
         id:
           type: string
@@ -506,24 +811,32 @@ components:
           $ref: '#/components/schemas/PayoutState'
         amount:
           $ref: '#/components/schemas/Asset'
+    BalanceItem:
+      type: object
+      required: [currency, available]
+      properties:
+        currency:
+          type: string
+        available:
+          $ref: '#/components/schemas/Money'
+        reserved:
+          $ref: '#/components/schemas/Money'
+        pending:
+          $ref: '#/components/schemas/Money'
+          description: >
+            Ожидающие зачисления средства (платежи в состояниях
+            detected/confirming); источник - агрегация Payment, не Ledger (7.4)
     BalanceList:
       type: object
+      required: [items]
       properties:
         items:
           type: array
           items:
-            type: object
-            properties:
-              currency:
-                type: string
-              available:
-                $ref: '#/components/schemas/Money'
-              reserved:
-                $ref: '#/components/schemas/Money'
-              pending:
-                $ref: '#/components/schemas/Money'
+            $ref: '#/components/schemas/BalanceItem'
     LedgerEntry:
       type: object
+      required: [entry_id, account_id, direction, amount]
       properties:
         entry_id:
           type: integer
@@ -532,7 +845,8 @@ components:
           type: string
         direction:
           type: string
-          enum: [debit, credit]
+          x-extensible-enum: [debit, credit]
+          description: Направление проводки; перечень расширяемый
         amount:
           $ref: '#/components/schemas/Asset'
         ref_type:
@@ -544,6 +858,7 @@ components:
           format: date-time
     LedgerEntryList:
       type: object
+      required: [items]
       properties:
         items:
           type: array
@@ -553,6 +868,7 @@ components:
           type: string
     ReportPage:
       type: object
+      required: [rows]
       properties:
         rows:
           type: array
@@ -560,6 +876,9 @@ components:
             type: object
             additionalProperties:
               type: string
+            description: >
+              Значения колонок строки; деньги и курсы - десятичные строки
+              канонического вида (без экспоненты, float запрещен)
         next_cursor:
           type: string
     WebhookEndpointRequest:
@@ -570,12 +889,15 @@ components:
         url:
           type: string
           format: uri
-          pattern: '^https://[^@]+$'
+          pattern: '^https://[^\s@\\]+$'
           maxLength: 2048
           description: >
-            Только https без userinfo и IP-литералов; SSRF-защита платформы:
-            блокировка private/loopback/link-local/metadata-диапазонов после
-            DNS-резолвинга на момент подключения, без следования redirect-ам
+            Только https без userinfo и IP-литералов; SSRF-защита платформы
+            применяется при каждой попытке доставки: резолвинг всех A/AAAA,
+            проверка диапазонов (IPv4 private/loopback/link-local/metadata
+            169.254.0.0/16, 0.0.0.0/8, 100.64.0.0/10; IPv6 ::1, fc00::/7,
+            fe80::/10, IPv4-mapped), подключение на проверенный адрес без
+            следования redirect-ам (защита от DNS-rebinding)
         events:
           type: array
           minItems: 1
@@ -602,6 +924,7 @@ components:
             автоматически - требуется повторная регистрация
     WebhookEndpointResponse:
       type: object
+      required: [id, url, events]
       properties:
         id:
           type: string
@@ -613,6 +936,9 @@ components:
             type: string
         signing_secret:
           type: string
+          minLength: 64
           description: >
-            Показывается один раз при регистрации; не менее 32 случайных байт
-            CSPRNG, не логируется и не попадает в URL
+            Секрет подписи: не менее 32 случайных байт CSPRNG в hex-кодировке.
+            Возвращается в исходном ответе регистрации и его идемпотентном
+            реплее; последующие чтения секрет не отдают, в логи и URL он не
+            попадает. Ротация - 8.1/13.2

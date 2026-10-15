@@ -10,8 +10,9 @@
 In scope: `.proto`-файлы, OpenAPI-черновики, `buf`-конфигурация, сгенерированные Go-стабы
 (`gen/`), правила совместимости.
 
-Out of scope: бизнес-логика сервисов, инфраструктура Schema Registry (задача 0.5), финализация
-OpenAPI мерчанта (7.1) и admin (12.1).
+Out of scope: бизнес-логика сервисов, инфраструктура Schema Registry (задача 0.5),
+реализация Billing API (7.1 финализирован этим репозиторием, код - в `cbl-billing-api`)
+и admin (12.1).
 
 Точки заморозки контрактов: CF-1 (Payment, Quote, Ledger, Connector, события gateway),
 CF-2 (`payment.events`, `ledger.events`, `payout.commands`, `gateway.payout.events`),
@@ -82,7 +83,9 @@ go build ./...
 - Каждое изменение: спека задачи в `.specs/`, затем правка proto, `buf lint`, `buf breaking`
   против предыдущего тега, генерация, `go build ./...`.
 - Версия контракта фиксируется тегом `cbl-protos@<version>`; номер версии попадает в спеки
-  зависимых сервисов.
+  зависимых сервисов. Инкрементальные аддитивные изменения и финализации артефактов волны
+  после `cf-N` выпускаются тегом `cf-N.M` с записью в `CBL-003` разделе 8 (примеры:
+  `cf-2.1` CBL-10.6, `cf-3.1` CBL-7.1).
 - Коммит: `CBL-<эпик>.<номер>: <краткое сообщение>`, спека в том же коммите. Контрактные
   заморозки не имеют номера задачи плана: коммит `CBL-CF<n>`, тег `cbl-protos@cf-<n>`
   (зафиксировано этой спекой и CBL-004).
@@ -112,6 +115,7 @@ go build ./...
 | CBL-CF2 | 2026-10-15 | done (верификация схем против W1, buf lint/breaking против cf-1, generate без диффа; заморозка CF-2) | `.specs/CBL-CF2-freeze.md` | тег `cbl-protos@cf-2` |
 | CBL-10.6 | 2026-10-15 | done (аддитивные refund_invoice_id: CreatePayoutRequest=7, Payout=12, PayoutEvent=11; buf lint/breaking против cf-2 зеленые; тег cf-2.1) | `.specs/CBL-10.6-refund-fields.md` | 5b3d1e0 |
 | CBL-CF3 | 2026-10-15 | done (webhooks.v1.yaml - каталог с invoice.failed, самодостаточные схемы данных, подпись, повторы; новый billing/notification/v1; Admin API v1 - ревизия routing, субъект из токена; Reporting Query v1 - комментарии; recon.alerts v1 + merchant_id; аддитивный PAYOUT_EVENT_TYPE_REJECTED; buf lint/breaking против cf-2.1, generate, build зеленые; заморозка CF-3) | `.specs/CBL-CF3-freeze.md` | тег `cbl-protos@cf-3` |
+| CBL-7.1 | 2026-10-15 | done, ревью закрыто (billing.v1.yaml 1.0.0: единые Problem-компоненты и Retry-After, Idempotent-Replayed, обязательные поля схем, closed-запросы, bearer-scoping; CBL-003 раздел 2 синхронизирован) | `.specs/CBL-7.1-openapi-finalization.md` | этот коммит |
 
 ## 9. Runbook
 
