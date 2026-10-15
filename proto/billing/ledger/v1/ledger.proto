@@ -104,17 +104,51 @@ message GetBalanceResponse {
   AccountBalance balance = 1;
 }
 
-// ListEntriesRequest запрашивает выписку по счету с курсорной пагинацией.
+// ListEntriesRequest запрашивает выписку по счету или мерчанту с курсорной
+// пагинацией. Заполняется account_id или merchant_ref (хотя бы одно):
+// merchant_ref ограничивает выписку счетами мерчанта плана счетов (merchant и
+// payout); account_id вне этого набора отклоняется как ненайденный. Период
+// фильтрует по времени транзакции: period_from включительно, period_to
+// исключительно; незаданные границы не ограничивают.
 message ListEntriesRequest {
   string account_id = 1;
   uint32 limit = 2;
   string cursor = 3;
+  // MerchantRef задает фильтр по счетам мерчанта (аддитивно cf-3.2, CBL-2.10).
+  string merchant_ref = 4;
+  // PeriodFrom задает нижнюю границу периода включительно.
+  google.protobuf.Timestamp period_from = 5;
+  // PeriodTo задает верхнюю границу периода исключительно.
+  google.protobuf.Timestamp period_to = 6;
 }
 
 // ListEntriesResponse возвращает страницу проводок.
 message ListEntriesResponse {
   repeated Entry entries = 1;
   string next_cursor = 2;
+}
+
+// MerchantAccount описывает счет мерчанта с балансом для BFF-выписок.
+message MerchantAccount {
+  string account_id = 1;
+  // Type задает тип счета плана счетов: merchant или payout.
+  string type = 2;
+  string asset = 3;
+  uint32 decimals = 4;
+  billing.common.v1.Money available = 5;
+  billing.common.v1.Money reserved = 6;
+}
+
+// ListMerchantAccountsRequest запрашивает счета мерчанта с балансами.
+message ListMerchantAccountsRequest {
+  // MerchantRef задает бизнес-ссылку мерчанта (обязательна).
+  string merchant_ref = 1;
+}
+
+// ListMerchantAccountsResponse возвращает счета мерчанта по возрастанию
+// (asset, type); суммы без проводок отдаются нулевыми.
+message ListMerchantAccountsResponse {
+  repeated MerchantAccount accounts = 1;
 }
 
 // LedgerService ведет двойную запись, резервы и балансы.
@@ -125,4 +159,7 @@ service LedgerService {
   rpc ReleaseReserve(ReleaseReserveRequest) returns (ReleaseReserveResponse);
   rpc GetBalance(GetBalanceRequest) returns (GetBalanceResponse);
   rpc ListEntries(ListEntriesRequest) returns (ListEntriesResponse);
+  // ListMerchantAccounts возвращает счета мерчанта с балансами (аддитивно
+  // cf-3.2, CBL-2.10; предпосылка 7.4 - балансы и ownership счетов BFF).
+  rpc ListMerchantAccounts(ListMerchantAccountsRequest) returns (ListMerchantAccountsResponse);
 }

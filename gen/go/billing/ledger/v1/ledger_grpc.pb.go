@@ -19,12 +19,13 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	LedgerService_PostTransaction_FullMethodName = "/billing.ledger.v1.LedgerService/PostTransaction"
-	LedgerService_Reserve_FullMethodName         = "/billing.ledger.v1.LedgerService/Reserve"
-	LedgerService_CommitReserve_FullMethodName   = "/billing.ledger.v1.LedgerService/CommitReserve"
-	LedgerService_ReleaseReserve_FullMethodName  = "/billing.ledger.v1.LedgerService/ReleaseReserve"
-	LedgerService_GetBalance_FullMethodName      = "/billing.ledger.v1.LedgerService/GetBalance"
-	LedgerService_ListEntries_FullMethodName     = "/billing.ledger.v1.LedgerService/ListEntries"
+	LedgerService_PostTransaction_FullMethodName      = "/billing.ledger.v1.LedgerService/PostTransaction"
+	LedgerService_Reserve_FullMethodName              = "/billing.ledger.v1.LedgerService/Reserve"
+	LedgerService_CommitReserve_FullMethodName        = "/billing.ledger.v1.LedgerService/CommitReserve"
+	LedgerService_ReleaseReserve_FullMethodName       = "/billing.ledger.v1.LedgerService/ReleaseReserve"
+	LedgerService_GetBalance_FullMethodName           = "/billing.ledger.v1.LedgerService/GetBalance"
+	LedgerService_ListEntries_FullMethodName          = "/billing.ledger.v1.LedgerService/ListEntries"
+	LedgerService_ListMerchantAccounts_FullMethodName = "/billing.ledger.v1.LedgerService/ListMerchantAccounts"
 )
 
 // LedgerServiceClient is the client API for LedgerService service.
@@ -39,6 +40,9 @@ type LedgerServiceClient interface {
 	ReleaseReserve(ctx context.Context, in *ReleaseReserveRequest, opts ...grpc.CallOption) (*ReleaseReserveResponse, error)
 	GetBalance(ctx context.Context, in *GetBalanceRequest, opts ...grpc.CallOption) (*GetBalanceResponse, error)
 	ListEntries(ctx context.Context, in *ListEntriesRequest, opts ...grpc.CallOption) (*ListEntriesResponse, error)
+	// ListMerchantAccounts возвращает счета мерчанта с балансами (аддитивно
+	// cf-3.2, CBL-2.10; предпосылка 7.4 - балансы и ownership счетов BFF).
+	ListMerchantAccounts(ctx context.Context, in *ListMerchantAccountsRequest, opts ...grpc.CallOption) (*ListMerchantAccountsResponse, error)
 }
 
 type ledgerServiceClient struct {
@@ -109,6 +113,16 @@ func (c *ledgerServiceClient) ListEntries(ctx context.Context, in *ListEntriesRe
 	return out, nil
 }
 
+func (c *ledgerServiceClient) ListMerchantAccounts(ctx context.Context, in *ListMerchantAccountsRequest, opts ...grpc.CallOption) (*ListMerchantAccountsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListMerchantAccountsResponse)
+	err := c.cc.Invoke(ctx, LedgerService_ListMerchantAccounts_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // LedgerServiceServer is the server API for LedgerService service.
 // All implementations must embed UnimplementedLedgerServiceServer
 // for forward compatibility.
@@ -121,6 +135,9 @@ type LedgerServiceServer interface {
 	ReleaseReserve(context.Context, *ReleaseReserveRequest) (*ReleaseReserveResponse, error)
 	GetBalance(context.Context, *GetBalanceRequest) (*GetBalanceResponse, error)
 	ListEntries(context.Context, *ListEntriesRequest) (*ListEntriesResponse, error)
+	// ListMerchantAccounts возвращает счета мерчанта с балансами (аддитивно
+	// cf-3.2, CBL-2.10; предпосылка 7.4 - балансы и ownership счетов BFF).
+	ListMerchantAccounts(context.Context, *ListMerchantAccountsRequest) (*ListMerchantAccountsResponse, error)
 	mustEmbedUnimplementedLedgerServiceServer()
 }
 
@@ -148,6 +165,9 @@ func (UnimplementedLedgerServiceServer) GetBalance(context.Context, *GetBalanceR
 }
 func (UnimplementedLedgerServiceServer) ListEntries(context.Context, *ListEntriesRequest) (*ListEntriesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListEntries not implemented")
+}
+func (UnimplementedLedgerServiceServer) ListMerchantAccounts(context.Context, *ListMerchantAccountsRequest) (*ListMerchantAccountsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListMerchantAccounts not implemented")
 }
 func (UnimplementedLedgerServiceServer) mustEmbedUnimplementedLedgerServiceServer() {}
 func (UnimplementedLedgerServiceServer) testEmbeddedByValue()                       {}
@@ -278,6 +298,24 @@ func _LedgerService_ListEntries_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _LedgerService_ListMerchantAccounts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListMerchantAccountsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LedgerServiceServer).ListMerchantAccounts(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: LedgerService_ListMerchantAccounts_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LedgerServiceServer).ListMerchantAccounts(ctx, req.(*ListMerchantAccountsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // LedgerService_ServiceDesc is the grpc.ServiceDesc for LedgerService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -308,6 +346,10 @@ var LedgerService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListEntries",
 			Handler:    _LedgerService_ListEntries_Handler,
+		},
+		{
+			MethodName: "ListMerchantAccounts",
+			Handler:    _LedgerService_ListMerchantAccounts_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
