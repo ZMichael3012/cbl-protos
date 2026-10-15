@@ -17,7 +17,9 @@ OpenAPI мерчанта (7.1) и admin (12.1).
 CF-2 (`payment.events`, `ledger.events`, `payout.commands`, `gateway.payout.events`),
 CF-3 (Notification, Reporting, `recon.alerts`, Admin API). См. `CBL-004`.
 Статус: CF-1 заморожен тегом `cbl-protos@cf-1` (13.10.2026), CF-2 - тегом
-`cbl-protos@cf-2` (15.10.2026, спека `.specs/CBL-CF2-freeze.md`).
+`cbl-protos@cf-2` (15.10.2026, спека `.specs/CBL-CF2-freeze.md`); после заморозки
+выпускаются только назад-совместимые аддитивные поля (буква тега `cf-2.1`,
+CBL-10.6: `refund_invoice_id` в payout-контрактах).
 
 ## 2. Контракты и потребители
 
@@ -104,6 +106,7 @@ go build ./...
 | :-- | :-- | :-- | :-- | :-- |
 | CBL-1.7 | 2026-10-13 | done (buf lint, generate, go build, emdash - зеленые; CF-1 заморожен) | `.specs/CBL-1.7-protos-and-contract-freeze.md` | 5c63b8b, тег `cbl-protos@cf-1` |
 | CBL-CF2 | 2026-10-15 | done (верификация схем против W1, buf lint/breaking против cf-1, generate без диффа; заморозка CF-2) | `.specs/CBL-CF2-freeze.md` | тег `cbl-protos@cf-2` |
+| CBL-10.6 | 2026-10-15 | done (аддитивные refund_invoice_id: CreatePayoutRequest=7, Payout=12, PayoutEvent=11; buf lint/breaking против cf-2 зеленые; тег cf-2.1) | `.specs/CBL-10.6-refund-fields.md` | 5b3d1e0 |
 
 ## 9. Runbook
 
