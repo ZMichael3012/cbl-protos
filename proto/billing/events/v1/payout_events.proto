@@ -38,4 +38,7 @@ message PayoutEvent {
   string failure_reason = 8;
   uint64 state_version = 9;
   google.protobuf.Timestamp occurred_at = 10;
+  // RefundInvoiceId задает исходный счет возврата: непустое значение означает,
+  // что событие относится к возврату (Notification 8.x публикует refund.*).
+  string refund_invoice_id = 11;
 }

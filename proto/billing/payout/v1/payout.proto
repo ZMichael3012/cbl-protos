@@ -33,6 +33,9 @@ message Payout {
   string failure_reason = 9;
   uint64 state_version = 10;
   google.protobuf.Timestamp created_at = 11;
+  // RefundInvoiceId задает исходный счет возврата: непустое значение означает,
+  // что выплата является возвратом (CBL-000, раздел 5).
+  string refund_invoice_id = 12;
 }
 
 // CreatePayoutRequest создает заявку на выплату.
@@ -43,6 +46,10 @@ message CreatePayoutRequest {
   string network = 4;
   string destination_address = 5;
   string merchant_ref = 6;
+  // RefundInvoiceId задает исходный счет возврата (CBL-003, раздел 2):
+  // непустое значение создает возврат тем же путем саги; сумма не больше
+  // возвращаемого остатка счета проверяется Billing API (7.x).
+  string refund_invoice_id = 7;
 }
 
 // CreatePayoutResponse возвращает созданную заявку.
