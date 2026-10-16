@@ -91,6 +91,69 @@ message GetCapabilitiesResponse {
   repeated Capability capabilities = 1;
 }
 
+// RoutingRuleAdmin describes one provider routing rule for the administrative
+// contour (CBL-12.2); the form matches GET/PUT /admin/v1/routing-rules.
+message RoutingRuleAdmin {
+  string provider = 1;
+  // operation limits the rule to one operation: "" - any, invoice, payout.
+  string operation = 2;
+  repeated string networks = 3;
+  repeated string assets = 4;
+  // priority orders the rules, lower is more important.
+  int32 priority = 5;
+  // weight distributes traffic within one priority.
+  int32 weight = 6;
+  // min_amount and max_amount bound the rule in minor units of the asset;
+  // 0 means no bound.
+  int64 min_amount = 7;
+  int64 max_amount = 8;
+  bool enabled = 9;
+}
+
+// GetRoutingRulesRequest requests the current routing configuration.
+message GetRoutingRulesRequest {}
+
+// GetRoutingRulesResponse returns the current configuration revision and all rules.
+message GetRoutingRulesResponse {
+  int64 revision = 1;
+  repeated RoutingRuleAdmin items = 2;
+}
+
+// PutRoutingRulesRequest replaces the whole routing configuration; revision is
+// the value from the last GET (optimistic concurrency, a mismatch is FailedPrecondition).
+message PutRoutingRulesRequest {
+  int64 revision = 1;
+  repeated RoutingRuleAdmin items = 2;
+}
+
+// PutRoutingRulesResponse returns the stored revision and rules.
+message PutRoutingRulesResponse {
+  int64 revision = 1;
+  repeated RoutingRuleAdmin items = 2;
+}
+
+// DisableProviderRequest disables a provider manually.
+message DisableProviderRequest {
+  string provider = 1;
+  // reason is an optional operator comment.
+  string reason = 2;
+}
+
+// DisableProviderResponse reports whether the provider was already disabled.
+message DisableProviderResponse {
+  bool already_disabled = 1;
+}
+
+// ConnectorAdminService is the administrative contour of the connector
+// (CBL-12.2): the routing configuration source of truth and the manual provider
+// disable. It is a separate service so the money-path ConnectorService server
+// interface and its fakes stay source-compatible.
+service ConnectorAdminService {
+  rpc GetRoutingRules(GetRoutingRulesRequest) returns (GetRoutingRulesResponse);
+  rpc PutRoutingRules(PutRoutingRulesRequest) returns (PutRoutingRulesResponse);
+  rpc DisableProvider(DisableProviderRequest) returns (DisableProviderResponse);
+}
+
 // ConnectorService abstracts external crypto gateways.
 service ConnectorService {
   rpc CreateInvoice(CreateInvoiceRequest) returns (CreateInvoiceResponse);
