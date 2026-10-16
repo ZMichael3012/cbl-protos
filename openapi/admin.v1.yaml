@@ -1,13 +1,13 @@
 openapi: 3.1.0
 info:
   title: CBL Back-office API
-  version: 1.0.0-draft
+  version: 1.0.0
   description: >
     Admin API of the CBL platform for operators: payout approval, provider
-    routing, discrepancy handling. Authentication is a bearer token of the
-    operator; RBAC and audit are on the cbl-backoffice side (12.1): every
-    action writes an audit log record (who, what, before/after). The route
-    composition was frozen by CF-3 and is finalized by task 12.1.
+    routing, discrepancy handling, operator action journal. Authentication is a
+    bearer token of the operator; RBAC and audit are on the cbl-backoffice side
+    (12.1): every mutating action writes an append-only audit log record (who,
+    what, before/after), readable through GET /audit-log.
 servers:
   - url: https://admin.example.com/admin/v1
 tags:
@@ -15,6 +15,7 @@ tags:
   - name: routing
   - name: reconciliation
   - name: providers
+  - name: audit
 security:
   - bearerAuth: []
 paths:
@@ -249,6 +250,62 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/Problem'
+  /audit-log:
+    get:
+      tags: [audit]
+      operationId: listAuditLog
+      summary: Operator action journal (append-only audit log)
+      description: >
+        Pages of immutable audit records, newest first (occurred_at and id
+        descending). The cursor is opaque and bound to the filter set; an
+        invalid cursor or period returns 400. Records are written by mutating
+        admin actions; this read route writes nothing.
+      parameters:
+        - name: operator_id
+          in: query
+          schema:
+            type: string
+          description: Filter by the acting operator (exact match)
+        - name: action
+          in: query
+          schema:
+            type: string
+          description: Filter by the action name (exact match)
+        - name: period_from
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Lower bound of occurred_at, inclusive (RFC 3339, UTC)
+        - name: period_to
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Upper bound of occurred_at, inclusive (RFC 3339, UTC)
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: A page of audit records
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AuditRecord'
+                  next_cursor:
+                    type: string
+                    description: Opaque cursor of the next page; empty at the end
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 components:
   securitySchemes:
     bearerAuth:
@@ -433,3 +490,33 @@ components:
           enum: [confirm_platform, confirm_gateway, manual_adjustment]
         comment:
           type: string
+    AuditRecord:
+      type: object
+      description: >
+        One immutable entry of the operator action journal: who did what, with
+        the state before and after. Records are never updated or deleted.
+      properties:
+        id:
+          type: string
+        occurred_at:
+          type: string
+          format: date-time
+        operator_id:
+          type: string
+          description: Token subject of the acting operator
+        action:
+          type: string
+          description: Action name, for example payout.approve or routing.update
+        resource_type:
+          type: string
+        resource_id:
+          type: string
+        request_id:
+          type: string
+          description: Request identifier linking the record to the access log
+        before:
+          type: [object, 'null']
+          description: State before the action (null for creations)
+        after:
+          type: [object, 'null']
+          description: State after the action (null for deletions)
