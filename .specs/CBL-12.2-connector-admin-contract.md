@@ -49,6 +49,12 @@ implementer; the gateway proxies opaque bodies). buf lint/breaking against `cf-3
 green; generation with the pinned plugins; the tags are `cbl-protos@cf-3.7` (proto) and
 `cbl-protos@cf-3.8` (the RoutingRule finalization).
 
+FR-4. `billing/payout/v1`: the additive `Payout.approved_by` (field 13, repeated
+string, vote order) - the back-office payout decision response (PayoutAdmin.approved_by
+of the frozen admin API) needs the approval progress; the vote journal itself stays
+internal to `cbl-payout`. buf lint/breaking against `cf-3.8` green; the tag is
+`cbl-protos@cf-3.9`.
+
 ## 3. Work plan
 
 Proto + OpenAPI edits -> spec -> buf lint/breaking, generate, build -> commit

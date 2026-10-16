@@ -36,6 +36,10 @@ message Payout {
   // RefundInvoiceId specifies the source refund invoice: a non-empty value
   // means the payout is a refund (CBL-000, section 5).
   string refund_invoice_id = 12;
+  // ApprovedBy lists the operators whose approval votes were recorded, in vote
+  // order (CBL-12.2: the back-office shows the approval progress of large
+  // payouts; the vote journal itself stays internal).
+  repeated string approved_by = 13;
 }
 
 // CreatePayoutRequest creates a payout request.
