@@ -36,11 +36,18 @@ source-compatible):
 
 FR-2. `openapi/admin.v1.yaml` 1.0.0: the `/payouts/{id}/reject` responses gain the
 missing `'422'` (a missing/empty reject reason is business validation), matching the
-field description that already says 422.
+field description that already says 422; the `RoutingRule` schema is finalized to the
+form of the source of truth (`RoutingRuleAdmin` in the connector): `operation`,
+`networks[]`/`assets[]` arrays (empty means any), `weight` minimum 1, and
+`min_amount`/`max_amount` as integer minor units of the asset (0 means no bound) instead
+of decimal `Money` strings, which were not convertible without a decimals source.
 
-FR-3. Additive only: new messages/RPCs/service, no field renumbering, no change to
-existing messages; buf lint/breaking against `cf-3.6` green; generation with the pinned
-plugins; the tag is `cbl-protos@cf-3.7`.
+FR-3. Additive only in the proto (`ConnectorAdminService` is a new service; no field
+renumbering, no change to existing messages); the `RoutingRule` schema revision in the
+OpenAPI is an in-place finalization recorded by this spec (the back-office is the only
+implementer; the gateway proxies opaque bodies). buf lint/breaking against `cf-3.6`
+green; generation with the pinned plugins; the tags are `cbl-protos@cf-3.7` (proto) and
+`cbl-protos@cf-3.8` (the RoutingRule finalization).
 
 ## 3. Work plan
 

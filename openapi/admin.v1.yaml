@@ -450,24 +450,40 @@ components:
     RoutingRule:
       type: object
       additionalProperties: false
-      required: [network, asset, provider, priority, enabled]
+      required: [provider, priority, enabled]
       properties:
-        network:
-          type: string
-        asset:
-          type: string
         provider:
           type: string
+        operation:
+          type: string
+          enum: ["", invoice, payout]
+          description: Empty means any operation
+        networks:
+          type: array
+          items:
+            type: string
+          description: Empty means any network
+        assets:
+          type: array
+          items:
+            type: string
+          description: Empty means any asset
         priority:
           type: integer
           minimum: 0
         weight:
           type: integer
-          minimum: 0
+          minimum: 1
         min_amount:
-          $ref: '#/components/schemas/Money'
+          type: integer
+          format: int64
+          minimum: 0
+          description: Lower bound in minor units of the asset; 0 means no bound
         max_amount:
-          $ref: '#/components/schemas/Money'
+          type: integer
+          format: int64
+          minimum: 0
+          description: Upper bound in minor units of the asset; 0 means no bound
         enabled:
           type: boolean
     Discrepancy:
