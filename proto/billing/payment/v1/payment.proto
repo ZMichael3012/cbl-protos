@@ -55,6 +55,14 @@ message Payment {
   string txid = 15;
   // Confirmations specifies the number of network confirmations (additive cf-3.4).
   uint32 confirmations = 16;
+  // CheckoutUrl specifies the hosted payment page of hosted providers; empty
+  // means the address flow is used (additive CF-4). Exactly one of pay_address
+  // and checkout_url is filled.
+  string checkout_url = 17;
+  // Provider specifies the gateway provider id (additive CF-4).
+  string provider = 18;
+  // RawStatus keeps the provider status string untouched (additive CF-4).
+  string raw_status = 19;
 }
 
 // CreatePaymentRequest creates a payment and locks the rate quote.
@@ -82,6 +90,9 @@ message CreatePaymentResponse {
   // cf-3.4): the source of pay_amount/pay_asset in the 201 merchant invoice
   // response, 7.4.
   billing.common.v1.Money expected_amount = 8;
+  // CheckoutUrl specifies the hosted payment page (additive CF-4); exactly one
+  // of pay_address and checkout_url is filled.
+  string checkout_url = 9;
 }
 
 // GetPaymentRequest requests a payment by identifier.

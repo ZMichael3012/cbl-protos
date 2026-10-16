@@ -36,4 +36,15 @@ message PaymentEvent {
   string txid = 9;
   uint64 state_version = 10;
   google.protobuf.Timestamp occurred_at = 11;
+  // Provider specifies the gateway provider id (additive CF-4): reporting
+  // fact_* and reconciliation attribute events by it.
+  string provider = 12;
+  // RawStatus keeps the provider status string untouched (additive CF-4).
+  string raw_status = 13;
+  // GatewayFee, NetworkFee and FxSpread split fee = 6 into components
+  // (COMMON-5, additive CF-4). A zero component means the provider did not
+  // report it separately, for example an estimated fee before settlement.
+  billing.common.v1.Money gateway_fee = 14;
+  billing.common.v1.Money network_fee = 15;
+  billing.common.v1.Money fx_spread = 16;
 }

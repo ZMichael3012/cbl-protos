@@ -9,7 +9,7 @@ lint:
 # breaking compares against the last freeze (including the incremental cf-N.M):
 # replace the tag with the current one before releasing a new version.
 breaking:
-	$(DOCKER_BUF) breaking --against ".git#tag=cbl-protos@cf-3.4"
+	$(DOCKER_BUF) breaking --against ".git#tag=cbl-protos@cf-4"
 
 # generate runs buf with the pinned version; the v prefix is required because
 # the argument is resolved as a Go module version.

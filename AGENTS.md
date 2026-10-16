@@ -16,13 +16,15 @@ and admin (12.1).
 
 Contract freeze points: CF-1 (Payment, Quote, Ledger, Connector, gateway events),
 CF-2 (`payment.events`, `ledger.events`, `payout.commands`, `gateway.payout.events`),
-CF-3 (the merchant webhook contract, Reporting `Query` v1, `recon.alerts` v1, Admin API v1).
-See `CBL-004`.
+CF-3 (the merchant webhook contract, Reporting `Query` v1, `recon.alerts` v1, Admin API v1),
+CF-4 (provider integration: provider-qualified capabilities, webhook verification state,
+raw status, fee split, provider in payout events, `EnableProvider`). See `CBL-004`.
 Status: CF-1 is frozen by the tag `cbl-protos@cf-1` (13.10.2026), CF-2 - by the tag
 `cbl-protos@cf-2` (15.10.2026, spec `.specs/CBL-CF2-freeze.md`), CF-3 - by the tag
-`cbl-protos@cf-3` (15.10.2026, spec `.specs/CBL-CF3-freeze.md`); after a freeze only
-backward-compatible additive fields are released (the tag letter `cf-2.1`,
-CBL-10.6: `refund_invoice_id` in payout contracts).
+`cbl-protos@cf-3` (15.10.2026, spec `.specs/CBL-CF3-freeze.md`), CF-4 - by the tag
+`cbl-protos@cf-4` (16.10.2026, spec `.specs/CBL-17.1-cf4-provider-contracts.md`);
+after a freeze only backward-compatible additive fields are released (the tag letter
+`cf-2.1`, CBL-10.6: `refund_invoice_id` in payout contracts).
 
 ## 2. Contracts and consumers
 
@@ -66,7 +68,7 @@ in a single wave (`CBL-003`, section 8).
 docker run --rm -v "%CD%":/w -w /w bufbuild/buf:1.47.2 lint
 
 # breaking against the latest freeze (see Makefile)
-docker run --rm -v "%CD%":/w -w /w bufbuild/buf:1.47.2 breaking --against ".git#tag=cbl-protos@cf-3"
+docker run --rm -v "%CD%":/w -w /w bufbuild/buf:1.47.2 breaking --against ".git#tag=cbl-protos@cf-4"
 
 # generation (plugins required in PATH: %USERPROFILE%\go\bin)
 go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.34.2
@@ -123,6 +125,7 @@ This repository is a contracts library: it has no service stand and no e2e scena
 | CBL-16.16 | 2026-10-16 | done (English contract comments and documentation: all .proto comments, OpenAPI descriptions, eight specs, AGENTS.md, README; gen/ regenerated with the pinned plugins (diff comment-only); buf lint/breaking/build green; make generate target fixed (v prefix)) | `.specs/CBL-16.16-conventions.md` | this commit |
 | CBL-12.1 | 2026-10-16 | done (admin.v1.yaml finalization for the back-office: version 1.0.0, additive GET /audit-log with the AuditRecord schema and filters; review follow-up: the 503 ServiceUnavailable response with Retry-After; no proto changes; tags cf-3.5/cf-3.6) | `.specs/CBL-12.1-admin-audit-route.md` | this commit, tags `cbl-protos@cf-3.5`/`cf-3.6` |
 | CBL-12.2 | 2026-10-16 | done (additive ConnectorAdminService: GetRoutingRules/PutRoutingRules with the revision-based optimistic concurrency, DisableProvider with the idempotent repeated disable; RoutingRuleAdmin; admin.v1.yaml gains the 422 response on payout reject and the RoutingRule finalization to the source-of-truth form (networks/assets arrays, minor-unit bounds); buf lint/breaking against cf-3.6, generate, build green; additive Payout.approved_by (cf-3.9) for the admin decision response; tags cf-3.7/cf-3.8/cf-3.9/cf-3.10) | `.specs/CBL-12.2-connector-admin-contract.md` | b8df893, 8af92fe, 4062b4e, f6d733d; tags `cbl-protos@cf-3.7`/`cf-3.8`/`cf-3.9`/`cf-3.10` |
+| CBL-17.1 | 2026-10-16 | done (CF-4 provider integration contracts: provider-qualified Capability with sandbox, max amount, decimals and payout/refund support; GetCapabilities provider filter; CreateInvoiceResponse.checkout_url; canonical PENDING status and raw_status in CanonicalPaymentStatus/CanonicalPaymentEvent; GatewayPayoutEvent.provider; PaymentEvent.provider/raw_status/gateway_fee/network_fee/fx_spread; Payment and CreatePaymentResponse checkout_url/provider/raw_status; WebhookSignatureState + fetch_required with the deprecated signature_verified; EnableProvider in ConnectorAdminService and POST /providers/{id}/enable in admin.v1.yaml; buf lint/breaking against cf-3.10, generate, build green; tag cf-4) | `.specs/CBL-17.1-cf4-provider-contracts.md` | this commit, tag `cbl-protos@cf-4` |
 
 ## 9. Runbook
 

@@ -22,6 +22,7 @@ const (
 	ConnectorAdminService_GetRoutingRules_FullMethodName = "/billing.connector.v1.ConnectorAdminService/GetRoutingRules"
 	ConnectorAdminService_PutRoutingRules_FullMethodName = "/billing.connector.v1.ConnectorAdminService/PutRoutingRules"
 	ConnectorAdminService_DisableProvider_FullMethodName = "/billing.connector.v1.ConnectorAdminService/DisableProvider"
+	ConnectorAdminService_EnableProvider_FullMethodName  = "/billing.connector.v1.ConnectorAdminService/EnableProvider"
 )
 
 // ConnectorAdminServiceClient is the client API for ConnectorAdminService service.
@@ -36,6 +37,7 @@ type ConnectorAdminServiceClient interface {
 	GetRoutingRules(ctx context.Context, in *GetRoutingRulesRequest, opts ...grpc.CallOption) (*GetRoutingRulesResponse, error)
 	PutRoutingRules(ctx context.Context, in *PutRoutingRulesRequest, opts ...grpc.CallOption) (*PutRoutingRulesResponse, error)
 	DisableProvider(ctx context.Context, in *DisableProviderRequest, opts ...grpc.CallOption) (*DisableProviderResponse, error)
+	EnableProvider(ctx context.Context, in *EnableProviderRequest, opts ...grpc.CallOption) (*EnableProviderResponse, error)
 }
 
 type connectorAdminServiceClient struct {
@@ -76,6 +78,16 @@ func (c *connectorAdminServiceClient) DisableProvider(ctx context.Context, in *D
 	return out, nil
 }
 
+func (c *connectorAdminServiceClient) EnableProvider(ctx context.Context, in *EnableProviderRequest, opts ...grpc.CallOption) (*EnableProviderResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(EnableProviderResponse)
+	err := c.cc.Invoke(ctx, ConnectorAdminService_EnableProvider_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ConnectorAdminServiceServer is the server API for ConnectorAdminService service.
 // All implementations must embed UnimplementedConnectorAdminServiceServer
 // for forward compatibility.
@@ -88,6 +100,7 @@ type ConnectorAdminServiceServer interface {
 	GetRoutingRules(context.Context, *GetRoutingRulesRequest) (*GetRoutingRulesResponse, error)
 	PutRoutingRules(context.Context, *PutRoutingRulesRequest) (*PutRoutingRulesResponse, error)
 	DisableProvider(context.Context, *DisableProviderRequest) (*DisableProviderResponse, error)
+	EnableProvider(context.Context, *EnableProviderRequest) (*EnableProviderResponse, error)
 	mustEmbedUnimplementedConnectorAdminServiceServer()
 }
 
@@ -106,6 +119,9 @@ func (UnimplementedConnectorAdminServiceServer) PutRoutingRules(context.Context,
 }
 func (UnimplementedConnectorAdminServiceServer) DisableProvider(context.Context, *DisableProviderRequest) (*DisableProviderResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DisableProvider not implemented")
+}
+func (UnimplementedConnectorAdminServiceServer) EnableProvider(context.Context, *EnableProviderRequest) (*EnableProviderResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method EnableProvider not implemented")
 }
 func (UnimplementedConnectorAdminServiceServer) mustEmbedUnimplementedConnectorAdminServiceServer() {}
 func (UnimplementedConnectorAdminServiceServer) testEmbeddedByValue()                               {}
@@ -182,6 +198,24 @@ func _ConnectorAdminService_DisableProvider_Handler(srv interface{}, ctx context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ConnectorAdminService_EnableProvider_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(EnableProviderRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConnectorAdminServiceServer).EnableProvider(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ConnectorAdminService_EnableProvider_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConnectorAdminServiceServer).EnableProvider(ctx, req.(*EnableProviderRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ConnectorAdminService_ServiceDesc is the grpc.ServiceDesc for ConnectorAdminService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -200,6 +234,10 @@ var ConnectorAdminService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DisableProvider",
 			Handler:    _ConnectorAdminService_DisableProvider_Handler,
+		},
+		{
+			MethodName: "EnableProvider",
+			Handler:    _ConnectorAdminService_EnableProvider_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

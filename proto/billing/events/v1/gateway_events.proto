@@ -7,6 +7,21 @@ import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/cbl/cbl-protos/gen/go/billing/events/v1;eventsv1";
 
+// WebhookSignatureState describes the result of the provider webhook
+// verification strategy (additive CF-4).
+enum WebhookSignatureState {
+  WEBHOOK_SIGNATURE_STATE_UNSPECIFIED = 0;
+  // Verified means the signature or token matched (HMAC or token echo).
+  WEBHOOK_SIGNATURE_STATE_VERIFIED = 1;
+  // HmacFailed means a present signature did not match (RawHMAC or
+  // CanonicalJSONHMAC).
+  WEBHOOK_SIGNATURE_STATE_HMAC_FAILED = 2;
+  // EchoMismatch means the CoinGate token did not match the stored one.
+  WEBHOOK_SIGNATURE_STATE_ECHO_MISMATCH = 3;
+  // Absent means the request carried no verifiable signature.
+  WEBHOOK_SIGNATURE_STATE_ABSENT = 4;
+}
+
 // GatewayWebhookRaw describes the raw provider webhook before normalization.
 message GatewayWebhookRaw {
   string provider = 1;
@@ -14,7 +29,15 @@ message GatewayWebhookRaw {
   google.protobuf.Timestamp received_at = 3;
   map<string, string> headers = 4;
   bytes raw_body = 5;
-  bool signature_verified = 6;
+  // SignatureVerified is deprecated by CF-4: use signature_state. It stays
+  // populated during the transition of the ingress and connector (17.2, 17.4)
+  // as signature_state == WEBHOOK_SIGNATURE_STATE_VERIFIED.
+  bool signature_verified = 6 [deprecated = true];
+  // SignatureState is the verification strategy result (additive CF-4).
+  WebhookSignatureState signature_state = 7;
+  // FetchRequired tells the connector to re-check the payment at the provider
+  // before publishing a canonical event (CoinGate, BitPay; additive CF-4).
+  bool fetch_required = 8;
 }
 
 // CanonicalPaymentEventType describes the canonical payment events from the gateway.
@@ -39,6 +62,8 @@ message CanonicalPaymentEvent {
   string txid = 7;
   string network = 8;
   google.protobuf.Timestamp gateway_event_ts = 9;
+  // RawStatus keeps the provider status string untouched (additive CF-4).
+  string raw_status = 10;
 }
 
 // GatewayPayoutEventType describes the canonical payout events from the gateway.
@@ -57,4 +82,7 @@ message GatewayPayoutEvent {
   string txid = 4;
   billing.common.v1.Money fee = 5;
   string reason = 6;
+  // Provider specifies the gateway provider id (additive CF-4): consumers of
+  // gateway.payout.events attribute the external result by it (17.11).
+  string provider = 7;
 }

@@ -16,6 +16,10 @@ enum CanonicalPaymentStatusValue {
   CANONICAL_PAYMENT_STATUS_VALUE_EXPIRED = 4;
   CANONICAL_PAYMENT_STATUS_VALUE_UNDERPAID = 5;
   CANONICAL_PAYMENT_STATUS_VALUE_OVERPAID = 6;
+  // Pending specifies an invoice before any deposit (additive CF-4): for
+  // example a NOWPayments payment in the waiting state returned by a status
+  // re-check; the previous enum could not express it.
+  CANONICAL_PAYMENT_STATUS_VALUE_PENDING = 7;
 }
 
 // CanonicalPaymentStatus describes the payment status in the unified platform model.
@@ -29,14 +33,37 @@ message CanonicalPaymentStatus {
   string txid = 7;
   string network = 8;
   google.protobuf.Timestamp gateway_event_ts = 9;
+  // RawStatus keeps the provider status string untouched (additive CF-4) for
+  // reconciliation, reporting and support; the canonical status is the
+  // mapping result.
+  string raw_status = 10;
 }
 
-// Capability describes provider capabilities per network and asset.
+// Capability describes provider capabilities per network and asset. Rows are
+// provider-qualified (additive CF-4): an empty provider means a legacy
+// single-provider row.
 message Capability {
   string network = 1;
   string asset = 2;
   billing.common.v1.Money min_amount = 3;
   uint32 confirmation_depth = 4;
+  // Provider specifies the provider id this row belongs to (additive CF-4).
+  string provider = 5;
+  // Sandbox tells whether the row came from the sandbox environment
+  // (additive CF-4).
+  bool sandbox = 6;
+  // MaxAmount bounds a single invoice amount; zero means no bound
+  // (additive CF-4).
+  billing.common.v1.Money max_amount = 7;
+  // Decimals specifies the asset scale used for minor-unit conversion
+  // (additive CF-4).
+  uint32 decimals = 8;
+  // SupportsPayouts tells whether the provider pays out this asset
+  // (additive CF-4).
+  bool supports_payouts = 9;
+  // SupportsRefunds tells whether the provider refunds this asset
+  // (additive CF-4).
+  bool supports_refunds = 10;
 }
 
 // CreateInvoiceRequest creates an invoice in the external gateway.
@@ -55,6 +82,10 @@ message CreateInvoiceResponse {
   string provider = 2;
   string address = 3;
   google.protobuf.Timestamp expires_at = 4;
+  // CheckoutUrl specifies the hosted payment page of providers without an
+  // on-chain address flow (CoinGate, BitPay, BTCPay, NOWPayments); empty for
+  // address-based providers (additive CF-4).
+  string checkout_url = 5;
 }
 
 // GetGatewayPaymentRequest re-checks the payment status at the gateway.
@@ -83,8 +114,11 @@ message ListGatewayPaymentsResponse {
   string next_cursor = 2;
 }
 
-// GetCapabilitiesRequest requests provider capabilities.
-message GetCapabilitiesRequest {}
+// GetCapabilitiesRequest requests provider capabilities; provider filters the
+// result, an empty value means all providers (additive CF-4).
+message GetCapabilitiesRequest {
+  string provider = 1;
+}
 
 // GetCapabilitiesResponse returns the capability list.
 message GetCapabilitiesResponse {
@@ -144,6 +178,19 @@ message DisableProviderResponse {
   bool already_disabled = 1;
 }
 
+// EnableProviderRequest enables a provider disabled manually before
+// (additive CF-4), the mirror of DisableProvider.
+message EnableProviderRequest {
+  string provider = 1;
+  // reason is an optional operator comment.
+  string reason = 2;
+}
+
+// EnableProviderResponse reports whether the provider was already enabled.
+message EnableProviderResponse {
+  bool already_enabled = 1;
+}
+
 // ConnectorAdminService is the administrative contour of the connector
 // (CBL-12.2): the routing configuration source of truth and the manual provider
 // disable. It is a separate service so the money-path ConnectorService server
@@ -152,6 +199,7 @@ service ConnectorAdminService {
   rpc GetRoutingRules(GetRoutingRulesRequest) returns (GetRoutingRulesResponse);
   rpc PutRoutingRules(PutRoutingRulesRequest) returns (PutRoutingRulesResponse);
   rpc DisableProvider(DisableProviderRequest) returns (DisableProviderResponse);
+  rpc EnableProvider(EnableProviderRequest) returns (EnableProviderResponse);
 }
 
 // ConnectorService abstracts external crypto gateways.

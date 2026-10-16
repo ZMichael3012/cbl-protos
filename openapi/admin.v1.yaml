@@ -268,6 +268,43 @@ paths:
           $ref: '#/components/responses/Problem'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
+  /providers/{id}/enable:
+    post:
+      tags: [providers]
+      operationId: enableProvider
+      summary: Enable a provider disabled before
+      description: >
+        Enabling an already enabled provider is idempotent: 204 without a new
+        audit record. The reason is optional. The provider is removed from the
+        disabled set and becomes selectable by the router again.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                reason:
+                  type: string
+      responses:
+        '204':
+          description: The provider is enabled
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/Problem'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /audit-log:
     get:
       tags: [audit]
