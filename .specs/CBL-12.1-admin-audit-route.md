@@ -24,8 +24,9 @@ action log. This spec records that additive finalization; the main 12.1 spec liv
 FR-1. `openapi/admin.v1.yaml` 1.0.0 (draft suffix removed): an added `GET /audit-log`
 route (tag `audit`) with filters `operator_id`, `action`, `period_from`/`period_to`
 (RFC 3339), shared `Limit`/`Cursor` parameters, `items`/`next_cursor` response, 400/401/403
-problem responses; the new `AuditRecord` schema (`id`, `occurred_at`, `operator_id`,
-`action`, `resource_type`, `resource_id`, `request_id`, nullable `before`/`after`).
+problem responses and the 503 `ServiceUnavailable` response (`Retry-After`); the new
+`AuditRecord` schema (`id`, `occurred_at`, `operator_id`, `action`, `resource_type`,
+`resource_id`, `request_id`, nullable `before`/`after`).
 
 FR-2. Additive only: no existing path, operationId, schema field or response semantic
 changes; the description stops saying "finalized by task 12.1".
@@ -42,5 +43,7 @@ unaffected (OpenAPI is not covered by buf; the OpenAPI validator is KI-P1).
 ## 4. Work plan
 
 Edit the YAML -> spec -> commit `CBL-12.1: admin.v1.yaml finalization: audit-log route`
--> tag `cbl-protos@cf-3.5`; `CBL-003` section 3 gets the audit-log bullet (umbrella,
-committed with the umbrella on instruction).
+-> tag `cbl-protos@cf-3.5`; the review follow-up adds the 503 response (commit
+`CBL-12.1: admin.v1.yaml 503 response for the audit log`, tag `cbl-protos@cf-3.6`);
+`CBL-003` section 3 gets the audit-log bullet (umbrella, committed with the umbrella on
+instruction).

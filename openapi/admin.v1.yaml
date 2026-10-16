@@ -306,6 +306,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
 components:
   securitySchemes:
     bearerAuth:
@@ -353,6 +355,18 @@ components:
             $ref: '#/components/schemas/Problem'
     Forbidden:
       description: Insufficient RBAC rights for the action
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    ServiceUnavailable:
+      description: >
+        The service or its storage is temporarily unavailable; retry after the
+        delay from the Retry-After header
+      headers:
+        Retry-After:
+          schema:
+            type: string
       content:
         application/problem+json:
           schema:

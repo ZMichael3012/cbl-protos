@@ -121,7 +121,7 @@ This repository is a contracts library: it has no service stand and no e2e scena
 | CBL-2.10 | 2026-10-15 | done (additive ListMerchantAccounts and merchant_ref/period ListEntries for BFF statements 7.4; buf lint/breaking against cf-3.1, generate, build green; tag cf-3.2; implementation - cbl-ledger fbe0c45) | `.specs/CBL-2.10-ledger-fields.md` | c0d2c54 |
 | CBL-4.8 | 2026-10-15 | done (Payment: rate/locked_until (cf-3.3), txid/confirmations, creation expected_amount (cf-3.4), ListPayments period; buf lint/breaking, generate, build green; implementation - cbl-payment bc903bd) | `.specs/CBL-4.8-payment-invoice-fields.md` | 96002bb, 6d1f442; tags `cbl-protos@cf-3.3`/`cf-3.4` |
 | CBL-16.16 | 2026-10-16 | done (English contract comments and documentation: all .proto comments, OpenAPI descriptions, eight specs, AGENTS.md, README; gen/ regenerated with the pinned plugins (diff comment-only); buf lint/breaking/build green; make generate target fixed (v prefix)) | `.specs/CBL-16.16-conventions.md` | this commit |
-| CBL-12.1 | 2026-10-16 | done (admin.v1.yaml finalization for the back-office: version 1.0.0, additive GET /audit-log with the AuditRecord schema and filters; no proto changes; tag cf-3.5) | `.specs/CBL-12.1-admin-audit-route.md` | this commit, tag `cbl-protos@cf-3.5` |
+| CBL-12.1 | 2026-10-16 | done (admin.v1.yaml finalization for the back-office: version 1.0.0, additive GET /audit-log with the AuditRecord schema and filters; review follow-up: the 503 ServiceUnavailable response with Retry-After; no proto changes; tags cf-3.5/cf-3.6) | `.specs/CBL-12.1-admin-audit-route.md` | this commit, tags `cbl-protos@cf-3.5`/`cf-3.6` |
 
 ## 9. Runbook
 
