@@ -116,8 +116,11 @@ type PaymentEvent struct {
 	// RawStatus keeps the provider status string untouched (additive CF-4).
 	RawStatus string `protobuf:"bytes,13,opt,name=raw_status,json=rawStatus,proto3" json:"raw_status,omitempty"`
 	// GatewayFee, NetworkFee and FxSpread split fee = 6 into components
-	// (COMMON-5, additive CF-4). A zero component means the provider did not
-	// report it separately, for example an estimated fee before settlement.
+	// (COMMON-5, additive CF-4). They are non-negative and use the same asset
+	// and decimals as the payment amount; a zero component means the provider
+	// did not report it separately, for example an estimated fee before
+	// settlement. The producer validates the values: an inconsistent split
+	// raises a reconciliation alert and does not reach the ledger.
 	GatewayFee *v1.Money `protobuf:"bytes,14,opt,name=gateway_fee,json=gatewayFee,proto3" json:"gateway_fee,omitempty"`
 	NetworkFee *v1.Money `protobuf:"bytes,15,opt,name=network_fee,json=networkFee,proto3" json:"network_fee,omitempty"`
 	FxSpread   *v1.Money `protobuf:"bytes,16,opt,name=fx_spread,json=fxSpread,proto3" json:"fx_spread,omitempty"`

@@ -26,4 +26,4 @@ go build ./...
 
 Changes are backward compatible only (BACKWARD_TRANSITIVE). Field numbers are never reused,
 deleted fields are marked `reserved`. Breaking changes - a new major package version
-and a synchronous migration of all consumers (freeze points CF-1 - CF-3 in `../../.specs/CBL-004-global-plan.md`).
+and a synchronous migration of all consumers (freeze points CF-1 - CF-4 in `../../.specs/CBL-004-global-plan.md`).

@@ -276,7 +276,8 @@ paths:
       description: >
         Enabling an already enabled provider is idempotent: 204 without a new
         audit record. The reason is optional. The provider is removed from the
-        disabled set and becomes selectable by the router again.
+        disabled set; the router may select it again subject to the circuit
+        breaker state and the configuration cache refresh (up to 60 s).
       parameters:
         - name: id
           in: path

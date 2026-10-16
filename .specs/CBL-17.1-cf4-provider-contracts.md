@@ -81,10 +81,42 @@ closes the admin symmetry for the provider control (17.15).
 
 FR-6. Freeze procedure: `buf lint` green; `buf breaking` against `cbl-protos@cf-3.10`
 green; generation with the pinned plugins (`protoc-gen-go` 1.34.2,
-`protoc-gen-go-grpc` 1.5.1); `go build ./...` green; tag `cbl-protos@cf-4`; task
-journal updated. CBL-003 sections 4 - 7 updated by the umbrella: webhook verification
-strategies and response policies (4), the gRPC table rows for the Connector (5), the
-topic catalog and the `PaymentEvent` example (6), the per-provider rate limit key (7).
+`protoc-gen-go-grpc` 1.5.1); `go build ./...` green; the full freeze tag is
+`cbl-protos@cf-4` annotated (the practice of CF-1 - CF-3); task journal updated. CBL-003
+sections 4 - 8 updated by the umbrella: webhook verification strategies and response
+policies (4), the gRPC table rows for the Connector (5), the topic catalog and the
+`PaymentEvent` example (6), the per-provider rate limit key (7), the CF-4 record (8);
+section 3 route list and the CBL-000/CBL-004/README references follow in the same sync.
+
+FR-7. Review follow-up (additive, tag `cbl-protos@cf-4.1`):
+
+- Fee path: `CanonicalPaymentStatus` and `CanonicalPaymentEvent` gain the same fee split
+  (`gateway_fee = 11`, `network_fee = 12`, `fx_spread = 13`): the connector is the only
+  component that sees the provider fee data (COMMON-5), so the frozen `payment.events`
+  split had no producer path without it; payment validates and re-publishes the values
+  (17.10).
+- CBL-003 section 4 hardening: the CoinGate `token` is removed from the raw body before
+  it is persisted or published (a verification secret must never land in the outbox,
+  Kafka or logs); token comparison is constant-time; the response policy applies after
+  the allowlist and intake limits (off-allowlist `403` and `429` keep their codes and
+  raise an alert); `fetch_required` is mandatory for CoinGate and BitPay regardless of
+  the flag, a fetch failure is retried and never published unchecked; unverified
+  deliveries are published with a random `event_id` (they must not poison the
+  deterministic dedup key of a genuine delivery) and never produce canonical events
+  (fail closed, only `VERIFIED` is trusted; `UNSPECIFIED` falls back to
+  `signature_verified` until the 17.4 cutover); mismatch alerts are aggregated.
+- CBL-003 section 6 and the proto comments: fee split validation rule (non-negative,
+  same asset and decimals as the payment amount; the producer validates; an inconsistent
+  split raises a recon alert and does not reach the ledger).
+- Comments: `max_amount` unset semantics, `decimals` authority versus the `Money` scale,
+  `EnableProvider` wording with the breaker/cache caveat, `checkout_url` wording (hosted
+  flow versus address flow for NOWPayments), `fetch_required` and `signature_state`
+  transition semantics.
+
+Review closure (4 reviewers, 16.10.2026): no-context - approved; architecture - approved
+after the fee path fix (FR-7); with-context - approved (tag annotation fixed by
+re-issuing `cf-4` annotated; doc sync items closed in the umbrella follow-up);
+security - approved after the token redaction and fee validation rules (FR-7).
 
 Out of scope (separate additive tags of later E17 tasks if needed): `quote.proto` audit
 fields (17.10), `recon.alerts` provider (17.13), notification contract changes (17.15),

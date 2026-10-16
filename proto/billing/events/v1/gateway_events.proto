@@ -8,7 +8,8 @@ import "google/protobuf/timestamp.proto";
 option go_package = "github.com/cbl/cbl-protos/gen/go/billing/events/v1;eventsv1";
 
 // WebhookSignatureState describes the result of the provider webhook
-// verification strategy (additive CF-4).
+// verification strategy (additive CF-4; the strategies are defined in CBL-003
+// section 4).
 enum WebhookSignatureState {
   WEBHOOK_SIGNATURE_STATE_UNSPECIFIED = 0;
   // Verified means the signature or token matched (HMAC or token echo).
@@ -33,10 +34,20 @@ message GatewayWebhookRaw {
   // populated during the transition of the ingress and connector (17.2, 17.4)
   // as signature_state == WEBHOOK_SIGNATURE_STATE_VERIFIED.
   bool signature_verified = 6 [deprecated = true];
-  // SignatureState is the verification strategy result (additive CF-4).
+  // SignatureState is the verification strategy result (additive CF-4). A
+  // consumer must trust only VERIFIED deliveries and must fail closed: no
+  // canonical event is published for any other state. UNSPECIFIED means a
+  // producer that has not migrated yet: consumers fall back to
+  // signature_verified until the 17.4 cutover, after which the fallback is
+  // removed. Unverified deliveries are published for observability with a
+  // random event_id, so they cannot poison the deterministic dedup key of the
+  // genuine delivery.
   WebhookSignatureState signature_state = 7;
   // FetchRequired tells the connector to re-check the payment at the provider
-  // before publishing a canonical event (CoinGate, BitPay; additive CF-4).
+  // before publishing a canonical event. It is mandatory for CoinGate and
+  // BitPay regardless of this flag: on a mismatch the raw event goes to the
+  // DLQ, on a fetch failure it is retried and never published unchecked
+  // (additive CF-4).
   bool fetch_required = 8;
 }
 
@@ -64,6 +75,13 @@ message CanonicalPaymentEvent {
   google.protobuf.Timestamp gateway_event_ts = 9;
   // RawStatus keeps the provider status string untouched (additive CF-4).
   string raw_status = 10;
+  // GatewayFee, NetworkFee and FxSpread carry the provider fee split
+  // (COMMON-5, additive cf-4.1): non-negative, in the same asset and decimals
+  // as received_amount; a zero component means the provider did not report it
+  // separately. The consumer validates the values (17.10).
+  billing.common.v1.Money gateway_fee = 11;
+  billing.common.v1.Money network_fee = 12;
+  billing.common.v1.Money fx_spread = 13;
 }
 
 // GatewayPayoutEventType describes the canonical payout events from the gateway.

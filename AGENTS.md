@@ -22,7 +22,8 @@ raw status, fee split, provider in payout events, `EnableProvider`). See `CBL-00
 Status: CF-1 is frozen by the tag `cbl-protos@cf-1` (13.10.2026), CF-2 - by the tag
 `cbl-protos@cf-2` (15.10.2026, spec `.specs/CBL-CF2-freeze.md`), CF-3 - by the tag
 `cbl-protos@cf-3` (15.10.2026, spec `.specs/CBL-CF3-freeze.md`), CF-4 - by the tag
-`cbl-protos@cf-4` (16.10.2026, spec `.specs/CBL-17.1-cf4-provider-contracts.md`);
+`cbl-protos@cf-4` annotated (16.10.2026, spec `.specs/CBL-17.1-cf4-provider-contracts.md`);
+the CF-4 review follow-up is released additively as `cbl-protos@cf-4.1`;
 after a freeze only backward-compatible additive fields are released (the tag letter
 `cf-2.1`, CBL-10.6: `refund_invoice_id` in payout contracts).
 
@@ -92,7 +93,8 @@ This repository is a contracts library: it has no service stand and no e2e scena
   section 8 (examples: `cf-2.1` CBL-10.6, `cf-3.1` CBL-7.1).
 - Commit: `CBL-<epic>.<number>: <short message>`, the spec in the same commit. Contract
   freezes have no global plan task number: commit `CBL-CF<n>`, tag `cbl-protos@cf-<n>`
-  (recorded by this spec and CBL-004).
+  (recorded by this spec and CBL-004); exception: E17 freeze tasks carry the plan
+  number (CF-4 = CBL-17.1).
 - Comments and documentation are written in English: proto comments, specs, AGENTS.md, README; wire-level identifiers and protocol field names stay unchanged.
 - Comments explain why, not what; errors via `%w`; panics are forbidden.
 - External proto dependencies are forbidden except well-known types.
@@ -125,7 +127,7 @@ This repository is a contracts library: it has no service stand and no e2e scena
 | CBL-16.16 | 2026-10-16 | done (English contract comments and documentation: all .proto comments, OpenAPI descriptions, eight specs, AGENTS.md, README; gen/ regenerated with the pinned plugins (diff comment-only); buf lint/breaking/build green; make generate target fixed (v prefix)) | `.specs/CBL-16.16-conventions.md` | this commit |
 | CBL-12.1 | 2026-10-16 | done (admin.v1.yaml finalization for the back-office: version 1.0.0, additive GET /audit-log with the AuditRecord schema and filters; review follow-up: the 503 ServiceUnavailable response with Retry-After; no proto changes; tags cf-3.5/cf-3.6) | `.specs/CBL-12.1-admin-audit-route.md` | this commit, tags `cbl-protos@cf-3.5`/`cf-3.6` |
 | CBL-12.2 | 2026-10-16 | done (additive ConnectorAdminService: GetRoutingRules/PutRoutingRules with the revision-based optimistic concurrency, DisableProvider with the idempotent repeated disable; RoutingRuleAdmin; admin.v1.yaml gains the 422 response on payout reject and the RoutingRule finalization to the source-of-truth form (networks/assets arrays, minor-unit bounds); buf lint/breaking against cf-3.6, generate, build green; additive Payout.approved_by (cf-3.9) for the admin decision response; tags cf-3.7/cf-3.8/cf-3.9/cf-3.10) | `.specs/CBL-12.2-connector-admin-contract.md` | b8df893, 8af92fe, 4062b4e, f6d733d; tags `cbl-protos@cf-3.7`/`cf-3.8`/`cf-3.9`/`cf-3.10` |
-| CBL-17.1 | 2026-10-16 | done (CF-4 provider integration contracts: provider-qualified Capability with sandbox, max amount, decimals and payout/refund support; GetCapabilities provider filter; CreateInvoiceResponse.checkout_url; canonical PENDING status and raw_status in CanonicalPaymentStatus/CanonicalPaymentEvent; GatewayPayoutEvent.provider; PaymentEvent.provider/raw_status/gateway_fee/network_fee/fx_spread; Payment and CreatePaymentResponse checkout_url/provider/raw_status; WebhookSignatureState + fetch_required with the deprecated signature_verified; EnableProvider in ConnectorAdminService and POST /providers/{id}/enable in admin.v1.yaml; buf lint/breaking against cf-3.10, generate, build green; tag cf-4) | `.specs/CBL-17.1-cf4-provider-contracts.md` | this commit, tag `cbl-protos@cf-4` |
+| CBL-17.1 | 2026-10-16 | done (CF-4 provider integration contracts: provider-qualified Capability with sandbox, max amount, decimals and payout/refund support; GetCapabilities provider filter; CreateInvoiceResponse.checkout_url; canonical PENDING status and raw_status in CanonicalPaymentStatus/CanonicalPaymentEvent; GatewayPayoutEvent.provider; PaymentEvent.provider/raw_status/gateway_fee/network_fee/fx_spread; Payment and CreatePaymentResponse checkout_url/provider/raw_status; WebhookSignatureState + fetch_required with the deprecated signature_verified; EnableProvider in ConnectorAdminService and POST /providers/{id}/enable in admin.v1.yaml; buf lint/breaking against cf-3.10, generate, build green; tag cf-4 annotated; review follow-up: fee split on the canonical status/event path, token redaction and fee validation rules in CBL-003, comments and admin enable wording; cf-4.1) | `.specs/CBL-17.1-cf4-provider-contracts.md` | f8cbae8, tags `cbl-protos@cf-4`/`cf-4.1` |
 
 ## 9. Runbook
 

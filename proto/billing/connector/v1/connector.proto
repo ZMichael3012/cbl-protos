@@ -37,6 +37,14 @@ message CanonicalPaymentStatus {
   // reconciliation, reporting and support; the canonical status is the
   // mapping result.
   string raw_status = 10;
+  // GatewayFee, NetworkFee and FxSpread carry the provider fee split
+  // (COMMON-5, additive cf-4.1): non-negative, in the same asset and decimals
+  // as received_amount; a zero component means the provider did not report it
+  // separately. The consumer validates the values (17.10): an inconsistent
+  // split raises a reconciliation alert and does not reach the ledger.
+  billing.common.v1.Money gateway_fee = 11;
+  billing.common.v1.Money network_fee = 12;
+  billing.common.v1.Money fx_spread = 13;
 }
 
 // Capability describes provider capabilities per network and asset. Rows are
@@ -52,11 +60,12 @@ message Capability {
   // Sandbox tells whether the row came from the sandbox environment
   // (additive CF-4).
   bool sandbox = 6;
-  // MaxAmount bounds a single invoice amount; zero means no bound
+  // MaxAmount bounds a single invoice amount; unset means no bound
   // (additive CF-4).
   billing.common.v1.Money max_amount = 7;
-  // Decimals specifies the asset scale used for minor-unit conversion
-  // (additive CF-4).
+  // Decimals is the authoritative asset scale of this row (additive CF-4);
+  // the connector validates that min_amount and max_amount use the same
+  // scale.
   uint32 decimals = 8;
   // SupportsPayouts tells whether the provider pays out this asset
   // (additive CF-4).
@@ -82,9 +91,9 @@ message CreateInvoiceResponse {
   string provider = 2;
   string address = 3;
   google.protobuf.Timestamp expires_at = 4;
-  // CheckoutUrl specifies the hosted payment page of providers without an
-  // on-chain address flow (CoinGate, BitPay, BTCPay, NOWPayments); empty for
-  // address-based providers (additive CF-4).
+  // CheckoutUrl specifies the hosted payment page when the provider returns
+  // one (hosted mode of CoinGate, BitPay, BTCPay and the NOWPayments invoice
+  // flow); empty when the flow returns an address (additive CF-4).
   string checkout_url = 5;
 }
 
@@ -178,8 +187,10 @@ message DisableProviderResponse {
   bool already_disabled = 1;
 }
 
-// EnableProviderRequest enables a provider disabled manually before
-// (additive CF-4), the mirror of DisableProvider.
+// EnableProviderRequest enables a provider that was disabled manually
+// (additive CF-4): the mirror of DisableProvider, it removes the provider from
+// the disabled set; routing may select it again subject to the circuit breaker
+// state and the configuration cache refresh.
 message EnableProviderRequest {
   string provider = 1;
   // reason is an optional operator comment.
