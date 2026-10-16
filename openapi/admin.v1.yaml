@@ -56,6 +56,8 @@ paths:
           $ref: '#/components/responses/Problem'
         '409':
           $ref: '#/components/responses/Problem'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /payouts/{id}/reject:
     post:
       tags: [payouts]
@@ -99,6 +101,8 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /routing-rules:
     get:
       tags: [routing]
@@ -115,6 +119,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
     put:
       tags: [routing]
       operationId: putRoutingRules
@@ -149,6 +155,8 @@ paths:
           $ref: '#/components/responses/Problem'
         '422':
           $ref: '#/components/responses/Problem'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /reconciliation/discrepancies:
     get:
       tags: [reconciliation]
@@ -258,6 +266,8 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/Problem'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /audit-log:
     get:
       tags: [audit]

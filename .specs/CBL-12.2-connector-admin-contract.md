@@ -58,6 +58,6 @@ internal to `cbl-payout`. buf lint/breaking against `cf-3.8` green; the tag is
 ## 3. Work plan
 
 Proto + OpenAPI edits -> spec -> buf lint/breaking, generate, build -> commit
-`CBL-12.2: connector admin service contract` -> tag `cbl-protos@cf-3.7`.
+`CBL-12.2: connector admin service contract` (tag `cbl-protos@cf-3.7`), the RoutingRule finalization (tag cf-3.8), the additive Payout.approved_by (tag cf-3.9) and the review follow-up adding the 503 ServiceUnavailable responses to the business routes (tag cf-3.10).
 Consumers: `cbl-connector` (server), `cbl-backoffice` (client); `CBL-003` section 3/7
 notes are updated with the umbrella on instruction.
