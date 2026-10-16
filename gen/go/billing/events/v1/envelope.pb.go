@@ -21,23 +21,23 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// EventMeta описывает служебные заголовки Kafka-сообщения конверта CBL.
+// EventMeta describes the service headers of a CBL envelope Kafka message.
 type EventMeta struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// EventID задает UUIDv7 сообщения, ключ идемпотентности inbox.
+	// EventID specifies the UUIDv7 of the message, the inbox idempotency key.
 	EventId string `protobuf:"bytes,1,opt,name=event_id,json=eventId,proto3" json:"event_id,omitempty"`
-	// EventType задает тип события, например payment.completed.
+	// EventType specifies the event type, for example payment.completed.
 	EventType string `protobuf:"bytes,2,opt,name=event_type,json=eventType,proto3" json:"event_type,omitempty"`
-	// OccurredAt задает время возникновения события в UTC.
+	// OccurredAt specifies the time the event occurred in UTC.
 	OccurredAt *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=occurred_at,json=occurredAt,proto3" json:"occurred_at,omitempty"`
-	// Producer задает сервис-продюсер события.
+	// Producer specifies the service that produced the event.
 	Producer string `protobuf:"bytes,4,opt,name=producer,proto3" json:"producer,omitempty"`
-	// Traceparent задает W3C trace context для сквозной трассировки.
+	// Traceparent specifies the W3C trace context for end-to-end tracing.
 	Traceparent string `protobuf:"bytes,5,opt,name=traceparent,proto3" json:"traceparent,omitempty"`
-	// SchemaVersion задает версию схемы события.
+	// SchemaVersion specifies the event schema version.
 	SchemaVersion string `protobuf:"bytes,6,opt,name=schema_version,json=schemaVersion,proto3" json:"schema_version,omitempty"`
 }
 

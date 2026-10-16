@@ -22,7 +22,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// PaymentEventType описывает типы событий жизненного цикла платежа.
+// PaymentEventType describes payment lifecycle event types.
 type PaymentEventType int32
 
 const (
@@ -90,10 +90,10 @@ func (PaymentEventType) EnumDescriptor() ([]byte, []int) {
 	return file_billing_events_v1_payment_events_proto_rawDescGZIP(), []int{0}
 }
 
-// PaymentEvent описывает событие платежа для топика payment.events.
-// occurred_at в теле - время перехода состояния (авторитетно); заголовок
-// конверта обязан зеркалить его. state_version - монотонный счетчик переходов
-// платежа (владелец - Payment, 4.1); потребители отбрасывают устаревшие версии.
+// PaymentEvent describes a payment event for the payment.events topic.
+// occurred_at in the body is the state transition time (authoritative); the
+// envelope header must mirror it. state_version is a monotonic counter of
+// payment transitions (owner: Payment, 4.1); consumers discard stale versions.
 type PaymentEvent struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

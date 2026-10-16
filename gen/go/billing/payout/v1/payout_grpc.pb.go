@@ -28,7 +28,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
-// PayoutService управляет сагой выплат и возвратов.
+// PayoutService manages the payout and refund saga.
 type PayoutServiceClient interface {
 	CreatePayout(ctx context.Context, in *CreatePayoutRequest, opts ...grpc.CallOption) (*CreatePayoutResponse, error)
 	ApprovePayout(ctx context.Context, in *ApprovePayoutRequest, opts ...grpc.CallOption) (*ApprovePayoutResponse, error)
@@ -77,7 +77,7 @@ func (c *payoutServiceClient) GetPayout(ctx context.Context, in *GetPayoutReques
 // All implementations must embed UnimplementedPayoutServiceServer
 // for forward compatibility.
 //
-// PayoutService управляет сагой выплат и возвратов.
+// PayoutService manages the payout and refund saga.
 type PayoutServiceServer interface {
 	CreatePayout(context.Context, *CreatePayoutRequest) (*CreatePayoutResponse, error)
 	ApprovePayout(context.Context, *ApprovePayoutRequest) (*ApprovePayoutResponse, error)

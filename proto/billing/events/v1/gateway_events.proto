@@ -7,7 +7,7 @@ import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/cbl/cbl-protos/gen/go/billing/events/v1;eventsv1";
 
-// GatewayWebhookRaw описывает сырой вебхук провайдера до нормализации.
+// GatewayWebhookRaw describes the raw provider webhook before normalization.
 message GatewayWebhookRaw {
   string provider = 1;
   string gateway_id = 2;
@@ -17,7 +17,7 @@ message GatewayWebhookRaw {
   bool signature_verified = 6;
 }
 
-// CanonicalPaymentEventType описывает канонические события платежа от шлюза.
+// CanonicalPaymentEventType describes the canonical payment events from the gateway.
 enum CanonicalPaymentEventType {
   CANONICAL_PAYMENT_EVENT_TYPE_UNSPECIFIED = 0;
   CANONICAL_PAYMENT_EVENT_TYPE_DETECTED = 1;
@@ -28,7 +28,7 @@ enum CanonicalPaymentEventType {
   CANONICAL_PAYMENT_EVENT_TYPE_OVERPAID = 6;
 }
 
-// CanonicalPaymentEvent описывает нормализованное событие платежа от шлюза.
+// CanonicalPaymentEvent describes the normalized payment event from the gateway.
 message CanonicalPaymentEvent {
   string payment_id = 1;
   string gateway_id = 2;
@@ -41,7 +41,7 @@ message CanonicalPaymentEvent {
   google.protobuf.Timestamp gateway_event_ts = 9;
 }
 
-// GatewayPayoutEventType описывает канонические события выплаты от шлюза.
+// GatewayPayoutEventType describes the canonical payout events from the gateway.
 enum GatewayPayoutEventType {
   GATEWAY_PAYOUT_EVENT_TYPE_UNSPECIFIED = 0;
   GATEWAY_PAYOUT_EVENT_TYPE_SUBMITTED = 1;
@@ -49,7 +49,7 @@ enum GatewayPayoutEventType {
   GATEWAY_PAYOUT_EVENT_TYPE_FAILED = 3;
 }
 
-// GatewayPayoutEvent описывает результат внешнего шага выплаты.
+// GatewayPayoutEvent describes the result of the external payout step.
 message GatewayPayoutEvent {
   string payout_id = 1;
   string gateway_payout_id = 2;

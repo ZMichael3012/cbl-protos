@@ -22,7 +22,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// CanonicalPaymentEventType описывает канонические события платежа от шлюза.
+// CanonicalPaymentEventType describes the canonical payment events from the gateway.
 type CanonicalPaymentEventType int32
 
 const (
@@ -84,7 +84,7 @@ func (CanonicalPaymentEventType) EnumDescriptor() ([]byte, []int) {
 	return file_billing_events_v1_gateway_events_proto_rawDescGZIP(), []int{0}
 }
 
-// GatewayPayoutEventType описывает канонические события выплаты от шлюза.
+// GatewayPayoutEventType describes the canonical payout events from the gateway.
 type GatewayPayoutEventType int32
 
 const (
@@ -137,7 +137,7 @@ func (GatewayPayoutEventType) EnumDescriptor() ([]byte, []int) {
 	return file_billing_events_v1_gateway_events_proto_rawDescGZIP(), []int{1}
 }
 
-// GatewayWebhookRaw описывает сырой вебхук провайдера до нормализации.
+// GatewayWebhookRaw describes the raw provider webhook before normalization.
 type GatewayWebhookRaw struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -225,7 +225,7 @@ func (x *GatewayWebhookRaw) GetSignatureVerified() bool {
 	return false
 }
 
-// CanonicalPaymentEvent описывает нормализованное событие платежа от шлюза.
+// CanonicalPaymentEvent describes the normalized payment event from the gateway.
 type CanonicalPaymentEvent struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -337,7 +337,7 @@ func (x *CanonicalPaymentEvent) GetGatewayEventTs() *timestamppb.Timestamp {
 	return nil
 }
 
-// GatewayPayoutEvent описывает результат внешнего шага выплаты.
+// GatewayPayoutEvent describes the result of the external payout step.
 type GatewayPayoutEvent struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

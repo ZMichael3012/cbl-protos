@@ -22,7 +22,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// PayoutEventType описывает типы событий жизненного цикла выплаты.
+// PayoutEventType describes payout lifecycle event types.
 type PayoutEventType int32
 
 const (
@@ -32,7 +32,7 @@ const (
 	PayoutEventType_PAYOUT_EVENT_TYPE_COMPLETED   PayoutEventType = 3
 	PayoutEventType_PAYOUT_EVENT_TYPE_FAILED      PayoutEventType = 4
 	PayoutEventType_PAYOUT_EVENT_TYPE_COMPENSATED PayoutEventType = 5
-	// Rejected задает вето оператора на выплату (10.5, аддитивно CF-3).
+	// Rejected specifies the operator veto on a payout (10.5, additive CF-3).
 	PayoutEventType_PAYOUT_EVENT_TYPE_REJECTED PayoutEventType = 6
 )
 
@@ -85,7 +85,7 @@ func (PayoutEventType) EnumDescriptor() ([]byte, []int) {
 	return file_billing_events_v1_payout_events_proto_rawDescGZIP(), []int{0}
 }
 
-// PayoutCommand описывает команду выплаты в топике payout.commands.
+// PayoutCommand describes a payout command in the payout.commands topic.
 type PayoutCommand struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -165,7 +165,7 @@ func (x *PayoutCommand) GetIdempotencyKey() string {
 	return ""
 }
 
-// PayoutEvent описывает событие выплаты для топика payout.events.
+// PayoutEvent describes a payout event for the payout.events topic.
 type PayoutEvent struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -181,8 +181,8 @@ type PayoutEvent struct {
 	FailureReason string                 `protobuf:"bytes,8,opt,name=failure_reason,json=failureReason,proto3" json:"failure_reason,omitempty"`
 	StateVersion  uint64                 `protobuf:"varint,9,opt,name=state_version,json=stateVersion,proto3" json:"state_version,omitempty"`
 	OccurredAt    *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=occurred_at,json=occurredAt,proto3" json:"occurred_at,omitempty"`
-	// RefundInvoiceId задает исходный счет возврата: непустое значение означает,
-	// что событие относится к возврату (Notification 8.x публикует refund.*).
+	// RefundInvoiceId specifies the source refund invoice: a non-empty value
+	// means the event belongs to a refund (Notification 8.x publishes refund.*).
 	RefundInvoiceId string `protobuf:"bytes,11,opt,name=refund_invoice_id,json=refundInvoiceId,proto3" json:"refund_invoice_id,omitempty"`
 }
 

@@ -7,7 +7,7 @@ import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/cbl/cbl-protos/gen/go/billing/events/v1;eventsv1";
 
-// PayoutCommand описывает команду выплаты в топике payout.commands.
+// PayoutCommand describes a payout command in the payout.commands topic.
 message PayoutCommand {
   string payout_id = 1;
   billing.common.v1.Money amount = 2;
@@ -16,7 +16,7 @@ message PayoutCommand {
   string idempotency_key = 5;
 }
 
-// PayoutEventType описывает типы событий жизненного цикла выплаты.
+// PayoutEventType describes payout lifecycle event types.
 enum PayoutEventType {
   PAYOUT_EVENT_TYPE_UNSPECIFIED = 0;
   PAYOUT_EVENT_TYPE_REQUESTED = 1;
@@ -24,11 +24,11 @@ enum PayoutEventType {
   PAYOUT_EVENT_TYPE_COMPLETED = 3;
   PAYOUT_EVENT_TYPE_FAILED = 4;
   PAYOUT_EVENT_TYPE_COMPENSATED = 5;
-  // Rejected задает вето оператора на выплату (10.5, аддитивно CF-3).
+  // Rejected specifies the operator veto on a payout (10.5, additive CF-3).
   PAYOUT_EVENT_TYPE_REJECTED = 6;
 }
 
-// PayoutEvent описывает событие выплаты для топика payout.events.
+// PayoutEvent describes a payout event for the payout.events topic.
 message PayoutEvent {
   string payout_id = 1;
   string merchant_id = 2;
@@ -40,7 +40,7 @@ message PayoutEvent {
   string failure_reason = 8;
   uint64 state_version = 9;
   google.protobuf.Timestamp occurred_at = 10;
-  // RefundInvoiceId задает исходный счет возврата: непустое значение означает,
-  // что событие относится к возврату (Notification 8.x публикует refund.*).
+  // RefundInvoiceId specifies the source refund invoice: a non-empty value
+  // means the event belongs to a refund (Notification 8.x publishes refund.*).
   string refund_invoice_id = 11;
 }

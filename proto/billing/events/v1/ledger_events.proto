@@ -7,7 +7,7 @@ import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/cbl/cbl-protos/gen/go/billing/events/v1;eventsv1";
 
-// LedgerEventType описывает типы событий леджера.
+// LedgerEventType describes ledger event types.
 enum LedgerEventType {
   LEDGER_EVENT_TYPE_UNSPECIFIED = 0;
   LEDGER_EVENT_TYPE_TRANSACTION_POSTED = 1;
@@ -16,19 +16,20 @@ enum LedgerEventType {
   LEDGER_EVENT_TYPE_RESERVE_RELEASED = 4;
 }
 
-// LedgerEntry описывает проводку в событии леджера.
+// LedgerEntry describes an entry in a ledger event.
 message LedgerEntry {
   string account_id = 1;
   billing.common.v1.Direction direction = 2;
   billing.common.v1.Money amount = 3;
 }
 
-// LedgerEvent описывает событие леджера для топика ledger.events.
-// Семантика по типам (CF-2): transaction.posted несет полный набор entries;
-// reserve.created и reserve.released не создают проводок (удержание), entries
-// пуст, transaction_id пуст, идентификация - ref_type/ref_id и сумма операции
-// через gRPC леджера; reserve.committed несет сбалансированные entries захвата.
-// occurred_at в теле - время события; заголовок конверта зеркалит его.
+// LedgerEvent describes a ledger event for the ledger.events topic.
+// Semantics by type (CF-2): transaction.posted carries the full set of entries;
+// reserve.created and reserve.released do not create postings (hold): entries
+// is empty, transaction_id is empty, identification is by ref_type/ref_id and
+// the operation amount through the ledger gRPC; reserve.committed carries
+// balanced capture entries. occurred_at in the body is the event time; the
+// envelope header mirrors it.
 message LedgerEvent {
   string transaction_id = 1;
   LedgerEventType type = 2;

@@ -21,31 +21,31 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// QueryRequest описывает запрос отчета из ClickHouse.
-// merchant_id заполняет Billing API из токена мерчанта (11.4), а не из
-// пользовательского запроса; прямые gRPC-вызовы внутренние. period_from и
-// period_to задают период в UTC (границы включаются), незаданные значения -
-// без ограничения. cursor непрозрачен для вызывающего и берется из
-// next_cursor предыдущей страницы.
+// QueryRequest describes a report query to ClickHouse.
+// merchant_id is filled by the Billing API from the merchant token (11.4), not
+// from the user request; direct gRPC calls are internal. period_from and
+// period_to set the period in UTC (bounds inclusive); unset values impose no
+// restriction. cursor is opaque to the caller and is taken from next_cursor of
+// the previous page.
 type QueryRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// ReportType задает идентификатор отчета из каталога 11.4/15.4.
+	// ReportType specifies the report identifier from the 11.4/15.4 catalog.
 	ReportType string `protobuf:"bytes,1,opt,name=report_type,json=reportType,proto3" json:"report_type,omitempty"`
-	// MerchantID задает мерчанта-владельца данных (из токена при проксировании).
+	// MerchantID specifies the merchant that owns the data (from the token when proxied).
 	MerchantId string `protobuf:"bytes,2,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`
-	// PeriodFrom задает начало периода в UTC включительно.
+	// PeriodFrom specifies the start of the period in UTC, inclusive.
 	PeriodFrom *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=period_from,json=periodFrom,proto3" json:"period_from,omitempty"`
-	// PeriodTo задает конец периода в UTC включительно.
+	// PeriodTo specifies the end of the period in UTC, inclusive.
 	PeriodTo *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=period_to,json=periodTo,proto3" json:"period_to,omitempty"`
-	// GroupBy задает измерение группировки строк отчета.
+	// GroupBy specifies the report row grouping dimension.
 	GroupBy string `protobuf:"bytes,5,opt,name=group_by,json=groupBy,proto3" json:"group_by,omitempty"`
-	// Limit задает размер страницы; 0 - серверный дефолт 20 (как Limit в
-	// billing.v1.yaml), максимум 100.
+	// Limit specifies the page size; 0 for the server default of 20 (as Limit in
+	// billing.v1.yaml), maximum 100.
 	Limit uint32 `protobuf:"varint,6,opt,name=limit,proto3" json:"limit,omitempty"`
-	// Cursor задает непрозрачный курсор продолжения.
+	// Cursor specifies the opaque continuation cursor.
 	Cursor string `protobuf:"bytes,7,opt,name=cursor,proto3" json:"cursor,omitempty"`
 }
 
@@ -130,15 +130,15 @@ func (x *QueryRequest) GetCursor() string {
 	return ""
 }
 
-// ReportRow описывает строку отчета: деньги и суммы передаются строками.
+// ReportRow describes a report row: money and amounts are passed as strings.
 type ReportRow struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// Values задает значения колонок строки; все значения - строки,
-	// денежные суммы и курсы - десятичные строки канонического вида
-	// ^-?(0|[1-9][0-9]*)(\.[0-9]+)?$ (без экспоненты, float запрещен).
+	// Values specifies the row column values; all values are strings, money
+	// amounts and rates are decimal strings in canonical form
+	// ^-?(0|[1-9][0-9]*)(\.[0-9]+)?$ (no exponent, float is forbidden).
 	Values map[string]string `protobuf:"bytes,1,rep,name=values,proto3" json:"values,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 }
 
@@ -181,15 +181,15 @@ func (x *ReportRow) GetValues() map[string]string {
 	return nil
 }
 
-// QueryResponse возвращает страницу отчета.
+// QueryResponse returns a page of the report.
 type QueryResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// Rows задает строки текущей страницы.
+	// Rows specifies the rows of the current page.
 	Rows []*ReportRow `protobuf:"bytes,1,rep,name=rows,proto3" json:"rows,omitempty"`
-	// NextCursor задает курсор следующей страницы; пусто - конец отчета.
+	// NextCursor specifies the cursor of the next page; empty means the end of the report.
 	NextCursor string `protobuf:"bytes,2,opt,name=next_cursor,json=nextCursor,proto3" json:"next_cursor,omitempty"`
 }
 

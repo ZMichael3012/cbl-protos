@@ -26,11 +26,11 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
-// NotificationService управляет эндпоинтами доставки вебхуков мерчантов.
-// Служебный сервис для Billing API (7.x) и Back-office (12.x); наружу
-// публикуется только REST мерчанта/оператора.
+// NotificationService manages merchant webhook delivery endpoints.
+// An internal service for the Billing API (7.x) and the Back-office (12.x);
+// only the merchant/operator REST is exposed externally.
 type NotificationServiceClient interface {
-	// RegisterWebhookEndpoint регистрирует эндпоинт и выдает секрет подписи.
+	// RegisterWebhookEndpoint registers an endpoint and issues the signing secret.
 	RegisterWebhookEndpoint(ctx context.Context, in *RegisterWebhookEndpointRequest, opts ...grpc.CallOption) (*RegisterWebhookEndpointResponse, error)
 }
 
@@ -56,11 +56,11 @@ func (c *notificationServiceClient) RegisterWebhookEndpoint(ctx context.Context,
 // All implementations must embed UnimplementedNotificationServiceServer
 // for forward compatibility.
 //
-// NotificationService управляет эндпоинтами доставки вебхуков мерчантов.
-// Служебный сервис для Billing API (7.x) и Back-office (12.x); наружу
-// публикуется только REST мерчанта/оператора.
+// NotificationService manages merchant webhook delivery endpoints.
+// An internal service for the Billing API (7.x) and the Back-office (12.x);
+// only the merchant/operator REST is exposed externally.
 type NotificationServiceServer interface {
-	// RegisterWebhookEndpoint регистрирует эндпоинт и выдает секрет подписи.
+	// RegisterWebhookEndpoint registers an endpoint and issues the signing secret.
 	RegisterWebhookEndpoint(context.Context, *RegisterWebhookEndpointRequest) (*RegisterWebhookEndpointResponse, error)
 	mustEmbedUnimplementedNotificationServiceServer()
 }

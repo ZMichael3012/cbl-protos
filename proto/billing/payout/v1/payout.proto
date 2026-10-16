@@ -7,7 +7,7 @@ import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/cbl/cbl-protos/gen/go/billing/payout/v1;payoutv1";
 
-// PayoutState описывает состояния конечного автомата выплаты.
+// PayoutState describes payout state machine states.
 enum PayoutState {
   PAYOUT_STATE_UNSPECIFIED = 0;
   PAYOUT_STATE_REQUESTED = 1;
@@ -20,7 +20,7 @@ enum PayoutState {
   PAYOUT_STATE_REJECTED = 8;
 }
 
-// Payout описывает выплату и ее текущее состояние.
+// Payout describes a payout and its current state.
 message Payout {
   string payout_id = 1;
   string merchant_id = 2;
@@ -33,12 +33,12 @@ message Payout {
   string failure_reason = 9;
   uint64 state_version = 10;
   google.protobuf.Timestamp created_at = 11;
-  // RefundInvoiceId задает исходный счет возврата: непустое значение означает,
-  // что выплата является возвратом (CBL-000, раздел 5).
+  // RefundInvoiceId specifies the source refund invoice: a non-empty value
+  // means the payout is a refund (CBL-000, section 5).
   string refund_invoice_id = 12;
 }
 
-// CreatePayoutRequest создает заявку на выплату.
+// CreatePayoutRequest creates a payout request.
 message CreatePayoutRequest {
   string idempotency_key = 1;
   string merchant_id = 2;
@@ -46,19 +46,19 @@ message CreatePayoutRequest {
   string network = 4;
   string destination_address = 5;
   string merchant_ref = 6;
-  // RefundInvoiceId задает исходный счет возврата (CBL-003, раздел 2):
-  // непустое значение создает возврат тем же путем саги; сумма не больше
-  // возвращаемого остатка счета проверяется Billing API (7.x).
+  // RefundInvoiceId specifies the source refund invoice (CBL-003, section 2):
+  // a non-empty value creates a refund through the same saga; the amount not
+  // exceeding the refundable account balance is checked by the Billing API (7.x).
   string refund_invoice_id = 7;
 }
 
-// CreatePayoutResponse возвращает созданную заявку.
+// CreatePayoutResponse returns the created payout request.
 message CreatePayoutResponse {
   string payout_id = 1;
   PayoutState state = 2;
 }
 
-// ApprovePayoutRequest подтверждает или отклоняет крупную выплату.
+// ApprovePayoutRequest approves or rejects a large payout.
 message ApprovePayoutRequest {
   string payout_id = 1;
   string operator_id = 2;
@@ -66,22 +66,22 @@ message ApprovePayoutRequest {
   string reason = 4;
 }
 
-// ApprovePayoutResponse возвращает состояние выплаты.
+// ApprovePayoutResponse returns the payout state.
 message ApprovePayoutResponse {
   Payout payout = 1;
 }
 
-// GetPayoutRequest запрашивает выплату по идентификатору.
+// GetPayoutRequest requests a payout by identifier.
 message GetPayoutRequest {
   string payout_id = 1;
 }
 
-// GetPayoutResponse возвращает выплату.
+// GetPayoutResponse returns the payout.
 message GetPayoutResponse {
   Payout payout = 1;
 }
 
-// PayoutService управляет сагой выплат и возвратов.
+// PayoutService manages the payout and refund saga.
 service PayoutService {
   rpc CreatePayout(CreatePayoutRequest) returns (CreatePayoutResponse);
   rpc ApprovePayout(ApprovePayoutRequest) returns (ApprovePayoutResponse);

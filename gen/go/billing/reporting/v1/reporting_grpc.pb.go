@@ -26,11 +26,11 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
-// ReportingService отдает отчеты по данным ClickHouse (дедлайн RPC 5 с,
-// CBL-003 раздел 5); сервис только читает ClickHouse и не участвует
-// в денежном контуре.
+// ReportingService serves reports from ClickHouse data (RPC deadline 5 s,
+// CBL-003 section 5); the service only reads ClickHouse and does not
+// participate in the money path.
 type ReportingServiceClient interface {
-	// Query возвращает страницу отчета.
+	// Query returns a page of the report.
 	Query(ctx context.Context, in *QueryRequest, opts ...grpc.CallOption) (*QueryResponse, error)
 }
 
@@ -56,11 +56,11 @@ func (c *reportingServiceClient) Query(ctx context.Context, in *QueryRequest, op
 // All implementations must embed UnimplementedReportingServiceServer
 // for forward compatibility.
 //
-// ReportingService отдает отчеты по данным ClickHouse (дедлайн RPC 5 с,
-// CBL-003 раздел 5); сервис только читает ClickHouse и не участвует
-// в денежном контуре.
+// ReportingService serves reports from ClickHouse data (RPC deadline 5 s,
+// CBL-003 section 5); the service only reads ClickHouse and does not
+// participate in the money path.
 type ReportingServiceServer interface {
-	// Query возвращает страницу отчета.
+	// Query returns a page of the report.
 	Query(context.Context, *QueryRequest) (*QueryResponse, error)
 	mustEmbedUnimplementedReportingServiceServer()
 }

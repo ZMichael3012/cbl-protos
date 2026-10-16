@@ -1,60 +1,60 @@
-# CBL-4.8. Контрактные поля Payment для счета мерчанта
+# CBL-4.8. Payment contract fields for the merchant invoice
 
-| Поле | Значение |
+| Field | Value |
 | :-- | :-- |
-| Эпик | E4 (Payment), контрактная часть задачи 4.8 |
-| Репозиторий | `cbl-protos` |
-| Размер | S (аддитивные поля) |
-| Волна | W3-BILLING (предпосылка 7.4, FR-8 спеки CBL-7.1) |
-| Зависит от | CF-3, тег `cbl-protos@cf-3.2` |
-| Версия контрактов | `cbl-protos@cf-3.3` (базовый) и `cbl-protos@cf-3.4` (поля по ревью) |
-| Статус | done (реализация - `cbl-payment`, см. `.specs/CBL-4.8-invoice-read-api.md`) |
+| Epic | E4 (Payment), the contract part of task 4.8 |
+| Repository | `cbl-protos` |
+| Size | S (additive fields) |
+| Wave | W3-BILLING (prerequisite of 7.4, FR-8 of spec CBL-7.1) |
+| Depends on | CF-3, tag `cbl-protos@cf-3.2` |
+| Contract version | `cbl-protos@cf-3.3` (base) and `cbl-protos@cf-3.4` (review fields) |
+| Status | done (implementation - `cbl-payment`, see `.specs/CBL-4.8-invoice-read-api.md`) |
 
-## 1. Контекст и цель
+## 1. Context and goal
 
-Ревью 7.1 (BLOCKER архитектуры) показало: `Payment`/`CreatePaymentResponse` не
-несли зафиксированный курс, срок его фиксации и данные сети (`txid`,
-`confirmations`), а `ListPayments` не умел период, - REST-инвойс мерчанта
-(`quote{rate, locked_until}`, `txid`, `confirmations`, фильтры списка) не имел
-источника, а 201 создания - `pay_amount`. Задача 4.8 (cbl-payment) реализует
-чтение; контракт выпущен в два аддитивных шага: `cf-3.3` (rate/locked_until,
-период) и `cf-3.4` (txid/confirmations, `expected_amount` в ответе создания) -
-после четырех ревью-проходов. Полная спека -
+The 7.1 review (an architecture BLOCKER) showed: `Payment`/`CreatePaymentResponse` did
+not carry the locked rate, its lock expiry and network data (`txid`,
+`confirmations`), and `ListPayments` had no period support - the merchant REST invoice
+(`quote{rate, locked_until}`, `txid`, `confirmations`, list filters) had no
+source, and the creation 201 lacked `pay_amount`. Task 4.8 (cbl-payment) implements the
+read; the contract was released in two additive steps: `cf-3.3` (rate/locked_until,
+period) and `cf-3.4` (txid/confirmations, `expected_amount` in the creation response) -
+after four review passes. The full spec is
 `cbl-payment/.specs/CBL-4.8-invoice-read-api.md`.
 
-## 2. Состав
+## 2. Composition
 
-| Артефакт | Изменение |
+| Artifact | Change |
 | :-- | :-- |
-| `Payment` | аддитивные `rate = 13`, `locked_until = 14` (cf-3.3), `txid = 15`, `confirmations = 16` (cf-3.4) |
-| `CreatePaymentResponse` | аддитивные `rate = 6`, `locked_until = 7` (cf-3.3), `expected_amount = 8` (cf-3.4) |
-| `ListPaymentsRequest` | аддитивные `created_from = 5`, `created_to = 6`; курсор - непрозрачный `next_cursor` (cf-3.3) |
+| `Payment` | additive `rate = 13`, `locked_until = 14` (cf-3.3), `txid = 15`, `confirmations = 16` (cf-3.4) |
+| `CreatePaymentResponse` | additive `rate = 6`, `locked_until = 7` (cf-3.3), `expected_amount = 8` (cf-3.4) |
+| `ListPaymentsRequest` | additive `created_from = 5`, `created_to = 6`; cursor - the opaque `next_cursor` (cf-3.3) |
 
-## 3. Требования
+## 3. Requirements
 
-FR-1. `rate` - десятичная строка зафиксированного курса; `locked_until` - срок
-фиксации; `txid`/`confirmations` - данные сети (заполняет consumer 4.3);
-`expected_amount` создания - смонтированные сумма и актив оплаты (источник
-`pay_amount`/`pay_asset` ответа 201); `pay_amount`/`pay_asset` чтений выводятся
-из `expected_amount`; `fee` не выносится (KI-payment-06).
+FR-1. `rate` - a decimal string of the locked rate; `locked_until` - the lock
+expiry; `txid`/`confirmations` - network data (filled by consumer 4.3);
+the creation `expected_amount` - the assembled amount and pay asset (the source
+of `pay_amount`/`pay_asset` in the 201 response); `pay_amount`/`pay_asset` of reads are
+derived from `expected_amount`; `fee` is not exposed (KI-payment-06).
 
-FR-2. `created_from`/`created_to` - период по `created_at` (from включительно,
-to исключительно); `merchant_id` обязателен; курсор - непрозрачное значение
-`next_cursor` предыдущего ответа (порядок `created_at DESC, id DESC`).
+FR-2. `created_from`/`created_to` - a period by `created_at` (from inclusive,
+to exclusive); `merchant_id` is mandatory; the cursor - the opaque value
+`next_cursor` of the previous response (order `created_at DESC, id DESC`).
 
-FR-3. Совместимость: `buf lint`, `buf breaking` против предыдущих тегов,
-`buf generate`, `go build ./...` - зеленые; существующие потребители не
-затронуты (аддитивность).
+FR-3. Compatibility: `buf lint`, `buf breaking` against the previous tags,
+`buf generate`, `go build ./...` are green; existing consumers are
+unaffected (additivity).
 
-## 4. Проверки
+## 4. Checks
 
-| Проверка | Команда | Результат |
+| Check | Command | Result |
 | :-- | :-- | :-- |
 | lint/breaking | `buf lint`; `buf breaking --against ".git#tag=cbl-protos@cf-3.3"` | clean |
-| generate/build | `buf generate`; `go build ./...` | clean (дифф стабов: txid/confirmations/expected_amount) |
-| эм-деш | `scripts/check-no-emdash.ps1` | clean |
+| generate/build | `buf generate`; `go build ./...` | clean (stub diff: txid/confirmations/expected_amount) |
+| em dash | `scripts/check-no-emdash.ps1` | clean |
 
-## 5. План и коммит
+## 5. Plan and commit
 
-Коммиты `CBL-4.8` (cf-3.3, 96002bb) и `CBL-4.8` (cf-3.4, поля по ревью);
-реализация - `cbl-payment` `CBL-4.8`.
+Commits `CBL-4.8` (cf-3.3, 96002bb) and `CBL-4.8` (cf-3.4, the review fields);
+implementation - `cbl-payment` `CBL-4.8`.

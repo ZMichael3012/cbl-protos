@@ -21,7 +21,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// ReconAlertType описывает класс расхождения сверки.
+// ReconAlertType describes the reconciliation mismatch class.
 type ReconAlertType int32
 
 const (
@@ -74,7 +74,7 @@ func (ReconAlertType) EnumDescriptor() ([]byte, []int) {
 	return file_billing_events_v1_recon_events_proto_rawDescGZIP(), []int{0}
 }
 
-// ReconAlertSeverity описывает критичность расхождения.
+// ReconAlertSeverity describes the mismatch severity.
 type ReconAlertSeverity int32
 
 const (
@@ -127,15 +127,16 @@ func (ReconAlertSeverity) EnumDescriptor() ([]byte, []int) {
 	return file_billing_events_v1_recon_events_proto_rawDescGZIP(), []int{1}
 }
 
-// ReconAlert описывает расхождение сверки для топика recon.alerts.
-// alert_id - UUIDv7, равный event_id конверта (единый ключ дедупликации
-// inbox и кликхаус-таблиц); ref_id - идентификатор сущности расхождения
-// (payment_id или payout_id), он же ключ партиции топика (CBL-003 раздел 6);
-// merchant_id - UUID мерчанта, заполняется продюсером (9.2) только при
-// привязке расхождения к мерчанту: пустое значение означает, что доставки
-// мерчанту нет (запись только для back-office и ClickHouse); expected и
-// actual - строки (десятичные суммы или имена состояний), created_at в теле
-// авторитетно - заголовок конверта зеркалит его.
+// ReconAlert describes a reconciliation mismatch for the recon.alerts topic.
+// alert_id is the UUIDv7 equal to the envelope event_id (a single deduplication
+// key of the inbox and ClickHouse tables); ref_id is the identifier of the
+// mismatched entity (payment_id or payout_id), also the topic partition key
+// (CBL-003 section 6); merchant_id is the merchant UUID, filled by the producer
+// (9.2) only when the mismatch is tied to a merchant: an empty value means
+// there is no merchant delivery (record only for the back-office and
+// ClickHouse); expected and actual are strings (decimal amounts or state
+// names); created_at in the body is authoritative - the envelope header
+// mirrors it.
 type ReconAlert struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -148,8 +149,8 @@ type ReconAlert struct {
 	Expected  string                 `protobuf:"bytes,5,opt,name=expected,proto3" json:"expected,omitempty"`
 	Actual    string                 `protobuf:"bytes,6,opt,name=actual,proto3" json:"actual,omitempty"`
 	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	// MerchantID задает мерчанта-владельца расхождения (включено в v1 при
-	// заморозке CF-3), пусто для системных расхождений.
+	// MerchantID specifies the owning merchant of the mismatch (included in v1
+	// at the CF-3 freeze), empty for system mismatches.
 	MerchantId string `protobuf:"bytes,8,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`
 }
 

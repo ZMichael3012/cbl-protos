@@ -22,7 +22,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// CanonicalPaymentStatusValue описывает канонический статус платежа у провайдера.
+// CanonicalPaymentStatusValue describes the canonical payment status at the provider.
 type CanonicalPaymentStatusValue int32
 
 const (
@@ -84,7 +84,7 @@ func (CanonicalPaymentStatusValue) EnumDescriptor() ([]byte, []int) {
 	return file_billing_connector_v1_connector_proto_rawDescGZIP(), []int{0}
 }
 
-// CanonicalPaymentStatus описывает статус платежа в единой модели платформы.
+// CanonicalPaymentStatus describes the payment status in the unified platform model.
 type CanonicalPaymentStatus struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -196,7 +196,7 @@ func (x *CanonicalPaymentStatus) GetGatewayEventTs() *timestamppb.Timestamp {
 	return nil
 }
 
-// Capability описывает возможности провайдера по сети и активу.
+// Capability describes provider capabilities per network and asset.
 type Capability struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -268,7 +268,7 @@ func (x *Capability) GetConfirmationDepth() uint32 {
 	return 0
 }
 
-// CreateInvoiceRequest создает счет во внешнем шлюзе.
+// CreateInvoiceRequest creates an invoice in the external gateway.
 type CreateInvoiceRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -356,7 +356,7 @@ func (x *CreateInvoiceRequest) GetExpiresAt() *timestamppb.Timestamp {
 	return nil
 }
 
-// CreateInvoiceResponse возвращает реквизиты оплаты от шлюза.
+// CreateInvoiceResponse returns the payment details from the gateway.
 type CreateInvoiceResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -428,7 +428,7 @@ func (x *CreateInvoiceResponse) GetExpiresAt() *timestamppb.Timestamp {
 	return nil
 }
 
-// GetGatewayPaymentRequest перепроверяет статус платежа у шлюза.
+// GetGatewayPaymentRequest re-checks the payment status at the gateway.
 type GetGatewayPaymentRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -484,7 +484,7 @@ func (x *GetGatewayPaymentRequest) GetGatewayId() string {
 	return ""
 }
 
-// GetGatewayPaymentResponse возвращает канонический статус.
+// GetGatewayPaymentResponse returns the canonical status.
 type GetGatewayPaymentResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -532,7 +532,7 @@ func (x *GetGatewayPaymentResponse) GetPayment() *CanonicalPaymentStatus {
 	return nil
 }
 
-// ListGatewayPaymentsRequest выгружает операции шлюза для сверки.
+// ListGatewayPaymentsRequest lists gateway operations for reconciliation.
 type ListGatewayPaymentsRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -612,7 +612,7 @@ func (x *ListGatewayPaymentsRequest) GetCursor() string {
 	return ""
 }
 
-// ListGatewayPaymentsResponse возвращает страницу операций шлюза.
+// ListGatewayPaymentsResponse returns a page of gateway operations.
 type ListGatewayPaymentsResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -668,7 +668,7 @@ func (x *ListGatewayPaymentsResponse) GetNextCursor() string {
 	return ""
 }
 
-// GetCapabilitiesRequest запрашивает возможности провайдеров.
+// GetCapabilitiesRequest requests provider capabilities.
 type GetCapabilitiesRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -707,7 +707,7 @@ func (*GetCapabilitiesRequest) Descriptor() ([]byte, []int) {
 	return file_billing_connector_v1_connector_proto_rawDescGZIP(), []int{8}
 }
 
-// GetCapabilitiesResponse возвращает список возможностей.
+// GetCapabilitiesResponse returns the capability list.
 type GetCapabilitiesResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

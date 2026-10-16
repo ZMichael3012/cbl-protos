@@ -27,7 +27,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
-// QuoteService управляет курсами и зафиксированными котировками.
+// QuoteService manages rates and locked quotes.
 type QuoteServiceClient interface {
 	LockQuote(ctx context.Context, in *LockQuoteRequest, opts ...grpc.CallOption) (*LockQuoteResponse, error)
 	GetRate(ctx context.Context, in *GetRateRequest, opts ...grpc.CallOption) (*GetRateResponse, error)
@@ -65,7 +65,7 @@ func (c *quoteServiceClient) GetRate(ctx context.Context, in *GetRateRequest, op
 // All implementations must embed UnimplementedQuoteServiceServer
 // for forward compatibility.
 //
-// QuoteService управляет курсами и зафиксированными котировками.
+// QuoteService manages rates and locked quotes.
 type QuoteServiceServer interface {
 	LockQuote(context.Context, *LockQuoteRequest) (*LockQuoteResponse, error)
 	GetRate(context.Context, *GetRateRequest) (*GetRateResponse, error)

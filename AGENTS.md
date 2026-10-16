@@ -1,32 +1,32 @@
 # AGENTS.md - cbl-protos
 
-Репозиторий контрактов платформы CBL: Protobuf-схемы gRPC и Kafka-событий, OpenAPI-черновики,
-правила совместимости (buf). Обязательные глобальные правила: `../../AGENTS.md`,
+Repository of contracts for the CBL platform: Protobuf schemas for gRPC and Kafka events,
+OpenAPI drafts, compatibility rules (buf). Mandatory global rules: `../../AGENTS.md`,
 `../../.specs/CBL-001-development-process.md`, `../../.specs/CBL-003-contracts.md`.
-Длинное тире (U+2014) запрещено, используется только дефис.
+The em dash (U+2014) is forbidden; only the hyphen is used.
 
-## 1. Назначение и границы
+## 1. Purpose and boundaries
 
-In scope: `.proto`-файлы, OpenAPI-черновики, `buf`-конфигурация, сгенерированные Go-стабы
-(`gen/`), правила совместимости.
+In scope: `.proto` files, OpenAPI drafts, `buf` configuration, generated Go stubs
+(`gen/`), compatibility rules.
 
-Out of scope: бизнес-логика сервисов, инфраструктура Schema Registry (задача 0.5),
-реализация Billing API (7.1 финализирован этим репозиторием, код - в `cbl-billing-api`)
-и admin (12.1).
+Out of scope: service business logic, Schema Registry infrastructure (task 0.5),
+Billing API implementation (7.1 finalized by this repository, code - in `cbl-billing-api`)
+and admin (12.1).
 
-Точки заморозки контрактов: CF-1 (Payment, Quote, Ledger, Connector, события gateway),
+Contract freeze points: CF-1 (Payment, Quote, Ledger, Connector, gateway events),
 CF-2 (`payment.events`, `ledger.events`, `payout.commands`, `gateway.payout.events`),
-CF-3 (контракт вебхуков мерчанта, Reporting `Query` v1, `recon.alerts` v1, Admin API v1).
-См. `CBL-004`.
-Статус: CF-1 заморожен тегом `cbl-protos@cf-1` (13.10.2026), CF-2 - тегом
-`cbl-protos@cf-2` (15.10.2026, спека `.specs/CBL-CF2-freeze.md`), CF-3 - тегом
-`cbl-protos@cf-3` (15.10.2026, спека `.specs/CBL-CF3-freeze.md`); после заморозки
-выпускаются только назад-совместимые аддитивные поля (буква тега `cf-2.1`,
-CBL-10.6: `refund_invoice_id` в payout-контрактах).
+CF-3 (the merchant webhook contract, Reporting `Query` v1, `recon.alerts` v1, Admin API v1).
+See `CBL-004`.
+Status: CF-1 is frozen by the tag `cbl-protos@cf-1` (13.10.2026), CF-2 - by the tag
+`cbl-protos@cf-2` (15.10.2026, spec `.specs/CBL-CF2-freeze.md`), CF-3 - by the tag
+`cbl-protos@cf-3` (15.10.2026, spec `.specs/CBL-CF3-freeze.md`); after a freeze only
+backward-compatible additive fields are released (the tag letter `cf-2.1`,
+CBL-10.6: `refund_invoice_id` in payout contracts).
 
-## 2. Контракты и потребители
+## 2. Contracts and consumers
 
-| Артефакт | Потребители |
+| Artifact | Consumers |
 | :-- | :-- |
 | `billing/payment/v1` | `cbl-payment`, `cbl-billing-api`, `cbl-reconciler` |
 | `billing/quote/v1` | `cbl-quote`, `cbl-payment`, `cbl-billing-api` |
@@ -35,95 +35,98 @@ CBL-10.6: `refund_invoice_id` в payout-контрактах).
 | `billing/payout/v1` | `cbl-payout`, `cbl-billing-api`, `cbl-backoffice` |
 | `billing/reporting/v1` | `cbl-reporting`, `cbl-billing-api` |
 | `billing/notification/v1` | `cbl-notification`, `cbl-billing-api` |
-| `billing/events/v1` | все продюсеры и консьюмеры Kafka (`CBL-003`, раздел 6) |
+| `billing/events/v1` | all Kafka producers and consumers (`CBL-003`, section 6) |
 | `openapi/billing.v1.yaml` | `cbl-billing-api`, `cbl-api-gateway` |
-| `openapi/webhooks.v1.yaml` | `cbl-notification`, мерчанты, `cbl-billing-api` |
+| `openapi/webhooks.v1.yaml` | `cbl-notification`, merchants, `cbl-billing-api` |
 | `openapi/admin.v1.yaml` | `cbl-backoffice`, `cbl-api-gateway` |
 
-## 3. Архитектура
+## 3. Architecture
 
 ```
 cbl-protos/
 ├── buf.yaml                # v2, lint STANDARD, breaking FILE
 ├── buf.gen.yaml            # protoc-gen-go, protoc-gen-go-grpc -> gen/go
-├── proto/billing/...       # доменные пакеты v1
-├── openapi/                # черновики OpenAPI v1
-├── gen/go/                 # сгенерированные стабы (коммитятся)
+├── proto/billing/...       # v1 domain packages
+├── openapi/                # OpenAPI v1 drafts
+├── gen/go/                 # generated stubs (committed)
 └── Makefile
 ```
 
-Модуль: `github.com/cbl/cbl-protos`; `go_package`:
+Module: `github.com/cbl/cbl-protos`; `go_package`:
 `github.com/cbl/cbl-protos/gen/go/billing/<domain>/v1;<domain>v1`.
 
-Правила эволюции: номера полей не переиспользуются; удаленные поля помечаются `reserved`;
-ломающие изменения только через новую мажорную версию пакета и переход всех потребителей
-одной волной (`CBL-003`, раздел 8).
+Evolution rules: field numbers are never reused; deleted fields are marked `reserved`;
+breaking changes only via a new major package version and migration of all consumers
+in a single wave (`CBL-003`, section 8).
 
-## 4. Команды
+## 4. Commands
 
 ```powershell
 # lint (Docker)
 docker run --rm -v "%CD%":/w -w /w bufbuild/buf:1.47.2 lint
 
-# breaking против последней заморозки (см. Makefile)
+# breaking against the latest freeze (see Makefile)
 docker run --rm -v "%CD%":/w -w /w bufbuild/buf:1.47.2 breaking --against ".git#tag=cbl-protos@cf-3"
 
-# генерация (нужны плагины в PATH: %USERPROFILE%\go\bin)
+# generation (plugins required in PATH: %USERPROFILE%\go\bin)
 go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.34.2
 go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.5.1
 go run github.com/bufbuild/buf/cmd/buf@v1.47.2 generate
 
-# сборка стабов
+# stub build
 go mod tidy
 go build ./...
 ```
 
-## 5. Правила разработки
+This repository is a contracts library: it has no service stand and no e2e scenarios; validation runs are `make lint`, `make breaking` and `make build`, plus regeneration with `make generate` after .proto comment or schema edits.
 
-- Каждое изменение: спека задачи в `.specs/`, затем правка proto, `buf lint`, `buf breaking`
-  против предыдущего тега, генерация, `go build ./...`.
-- Версия контракта фиксируется тегом `cbl-protos@<version>`; номер версии попадает в спеки
-  зависимых сервисов. Инкрементальные аддитивные изменения и финализации артефактов волны
-  после `cf-N` выпускаются тегом `cf-N.M` с записью в `CBL-003` разделе 8 (примеры:
-  `cf-2.1` CBL-10.6, `cf-3.1` CBL-7.1).
-- Коммит: `CBL-<эпик>.<номер>: <краткое сообщение>`, спека в том же коммите. Контрактные
-  заморозки не имеют номера задачи плана: коммит `CBL-CF<n>`, тег `cbl-protos@cf-<n>`
-  (зафиксировано этой спекой и CBL-004).
-- Docstring на русском в стиле godoc для рукописного Go; сгенерированный код исключен.
-- Комментарии объясняют почему, а не что; ошибки через `%w`; панки запрещены.
-- Запрещены внешние proto-зависимости, кроме well-known types.
+## 5. Development rules
+
+- Every change: a task spec in `.specs/`, then the proto edit, `buf lint`, `buf breaking`
+  against the previous tag, generation, `go build ./...`.
+- The contract version is pinned by the tag `cbl-protos@<version>`; the version number lands
+  in the specs of dependent services. Incremental additive changes and wave artifact
+  finalizations after `cf-N` are released with the tag `cf-N.M` and recorded in `CBL-003`
+  section 8 (examples: `cf-2.1` CBL-10.6, `cf-3.1` CBL-7.1).
+- Commit: `CBL-<epic>.<number>: <short message>`, the spec in the same commit. Contract
+  freezes have no global plan task number: commit `CBL-CF<n>`, tag `cbl-protos@cf-<n>`
+  (recorded by this spec and CBL-004).
+- Comments and documentation are written in English: proto comments, specs, AGENTS.md, README; wire-level identifiers and protocol field names stay unchanged.
+- Comments explain why, not what; errors via `%w`; panics are forbidden.
+- External proto dependencies are forbidden except well-known types.
 
 ## 6. Trade-offs
 
-| ID | Решение | Плюсы | Минусы и компенсация |
+| ID | Decision | Pros | Cons and compensation |
 | :-- | :-- | :-- | :-- |
-| T-P1 | buf v2 как единственный инструмент lint/breaking/generate | единые правила, одна утилита | привязка к версии buf; версия фиксируется в Makefile и CI |
-| T-P2 | сгенерированные стабы коммитятся в `gen/` | потребители собираются без кодогенерации | диффы растут; регенерация обязательна в каждом изменении proto |
+| T-P1 | buf v2 as the single lint/breaking/generate tool | uniform rules, one utility | coupling to the buf version; the version is pinned in the Makefile and CI |
+| T-P2 | generated stubs are committed to `gen/` | consumers build without code generation | diffs grow; regeneration is mandatory on every proto change |
 
 ## 7. Known issues
 
-| ID | Проблема | Влияние | План | Статус |
+| ID | Problem | Impact | Plan | Status |
 | :-- | :-- | :-- | :-- | :-- |
-| KI-P1 | Валидатор OpenAPI (spectral/redocly) не подключен | опечатки в схемах до появления CI | задача 0.2 | open |
-| KI-P2 | Schema Registry подключается отдельно | события проверяются после интеграции | задача 0.5 | open |
+| KI-P1 | OpenAPI validator (spectral/redocly) is not connected | typos in schemas until CI appears | task 0.2 | open |
+| KI-P2 | Schema Registry is connected separately | events are validated after integration | task 0.5 | open |
 
-## 8. Журнал задач
+## 8. Task journal
 
-| CBL | Дата | Статус | Спека | Коммит |
+| CBL | Date | Status | Spec | Commit |
 | :-- | :-- | :-- | :-- | :-- |
-| CBL-1.7 | 2026-10-13 | done (buf lint, generate, go build, emdash - зеленые; CF-1 заморожен) | `.specs/CBL-1.7-protos-and-contract-freeze.md` | 5c63b8b, тег `cbl-protos@cf-1` |
-| CBL-CF2 | 2026-10-15 | done (верификация схем против W1, buf lint/breaking против cf-1, generate без диффа; заморозка CF-2) | `.specs/CBL-CF2-freeze.md` | тег `cbl-protos@cf-2` |
-| CBL-10.6 | 2026-10-15 | done (аддитивные refund_invoice_id: CreatePayoutRequest=7, Payout=12, PayoutEvent=11; buf lint/breaking против cf-2 зеленые; тег cf-2.1) | `.specs/CBL-10.6-refund-fields.md` | 5b3d1e0 |
-| CBL-CF3 | 2026-10-15 | done (webhooks.v1.yaml - каталог с invoice.failed, самодостаточные схемы данных, подпись, повторы; новый billing/notification/v1; Admin API v1 - ревизия routing, субъект из токена; Reporting Query v1 - комментарии; recon.alerts v1 + merchant_id; аддитивный PAYOUT_EVENT_TYPE_REJECTED; buf lint/breaking против cf-2.1, generate, build зеленые; заморозка CF-3) | `.specs/CBL-CF3-freeze.md` | тег `cbl-protos@cf-3` |
-| CBL-7.1 | 2026-10-15 | done, ревью закрыто (billing.v1.yaml 1.0.0: единые Problem-компоненты и Retry-After, Idempotent-Replayed, обязательные поля схем, closed-запросы, bearer-scoping; CBL-003 раздел 2 синхронизирован) | `.specs/CBL-7.1-openapi-finalization.md` | e9283e1, тег `cbl-protos@cf-3.1` |
-| CBL-2.10 | 2026-10-15 | done (аддитивные ListMerchantAccounts и merchant_ref/период ListEntries для BFF-выписок 7.4; buf lint/breaking против cf-3.1, generate, build зеленые; тег cf-3.2; реализация - cbl-ledger fbe0c45) | `.specs/CBL-2.10-ledger-fields.md` | c0d2c54 |
-| CBL-4.8 | 2026-10-15 | done (Payment: rate/locked_until (cf-3.3), txid/confirmations, expected_amount создания (cf-3.4), период ListPayments; buf lint/breaking, generate, build зеленые; реализация - cbl-payment bc903bd) | `.specs/CBL-4.8-payment-invoice-fields.md` | 96002bb, 6d1f442; теги `cbl-protos@cf-3.3`/`cf-3.4` |
+| CBL-1.7 | 2026-10-13 | done (buf lint, generate, go build, emdash - green; CF-1 frozen) | `.specs/CBL-1.7-protos-and-contract-freeze.md` | 5c63b8b, tag `cbl-protos@cf-1` |
+| CBL-CF2 | 2026-10-15 | done (schema verification against W1, buf lint/breaking against cf-1, generate without a diff; CF-2 freeze) | `.specs/CBL-CF2-freeze.md` | tag `cbl-protos@cf-2` |
+| CBL-10.6 | 2026-10-15 | done (additive refund_invoice_id: CreatePayoutRequest=7, Payout=12, PayoutEvent=11; buf lint/breaking against cf-2 green; tag cf-2.1) | `.specs/CBL-10.6-refund-fields.md` | 5b3d1e0 |
+| CBL-CF3 | 2026-10-15 | done (webhooks.v1.yaml - a catalog with invoice.failed, self-contained data schemas, signature, retries; new billing/notification/v1; Admin API v1 - routing revision, subject from the token; Reporting Query v1 - comments; recon.alerts v1 + merchant_id; additive PAYOUT_EVENT_TYPE_REJECTED; buf lint/breaking against cf-2.1, generate, build green; CF-3 freeze) | `.specs/CBL-CF3-freeze.md` | tag `cbl-protos@cf-3` |
+| CBL-7.1 | 2026-10-15 | done, review closed (billing.v1.yaml 1.0.0: unified Problem components and Retry-After, Idempotent-Replayed, mandatory schema fields, closed requests, bearer-scoping; CBL-003 section 2 synchronized) | `.specs/CBL-7.1-openapi-finalization.md` | e9283e1, tag `cbl-protos@cf-3.1` |
+| CBL-2.10 | 2026-10-15 | done (additive ListMerchantAccounts and merchant_ref/period ListEntries for BFF statements 7.4; buf lint/breaking against cf-3.1, generate, build green; tag cf-3.2; implementation - cbl-ledger fbe0c45) | `.specs/CBL-2.10-ledger-fields.md` | c0d2c54 |
+| CBL-4.8 | 2026-10-15 | done (Payment: rate/locked_until (cf-3.3), txid/confirmations, creation expected_amount (cf-3.4), ListPayments period; buf lint/breaking, generate, build green; implementation - cbl-payment bc903bd) | `.specs/CBL-4.8-payment-invoice-fields.md` | 96002bb, 6d1f442; tags `cbl-protos@cf-3.3`/`cf-3.4` |
+| CBL-16.16 | 2026-10-16 | done (English contract comments and documentation: all .proto comments, OpenAPI descriptions, eight specs, AGENTS.md, README; gen/ regenerated with the pinned plugins (diff comment-only); buf lint/breaking/build green; make generate target fixed (v prefix)) | `.specs/CBL-16.16-conventions.md` | this commit |
 
 ## 9. Runbook
 
-Выпуск новой версии контракта:
+Releasing a new contract version:
 
-1. PR с правкой proto и обновлением спеки.
-2. `buf lint` и `buf breaking` против предыдущего тега, регенерация стабов.
-3. Merge, тег `cbl-protos@<version>`, обновление зависимостей сервисов-потребителей.
-4. Обновление `CBL-003` при изменении описательной части, уведомление агентов волны.
+1. PR with the proto edit and the spec update.
+2. `buf lint` and `buf breaking` against the previous tag, stub regeneration.
+3. Merge, tag `cbl-protos@<version>`, update of consumer service dependencies.
+4. Update of `CBL-003` when the descriptive part changes, notification of the wave agents.

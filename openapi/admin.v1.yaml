@@ -3,11 +3,11 @@ info:
   title: CBL Back-office API
   version: 1.0.0-draft
   description: >
-    Admin API платформы CBL для операторов: утверждение выплат, маршрутизация
-    провайдеров, работа с расхождениями. Аутентификация - bearer-токен
-    оператора, RBAC и аудит на стороне cbl-backoffice (12.1): каждое действие
-    пишет запись аудит-лога (кто, что, до/после). Состав маршрутов заморожен
-    CF-3, финализируется задачей 12.1.
+    Admin API of the CBL platform for operators: payout approval, provider
+    routing, discrepancy handling. Authentication is a bearer token of the
+    operator; RBAC and audit are on the cbl-backoffice side (12.1): every
+    action writes an audit log record (who, what, before/after). The route
+    composition was frozen by CF-3 and is finalized by task 12.1.
 servers:
   - url: https://admin.example.com/admin/v1
 tags:
@@ -22,13 +22,14 @@ paths:
     post:
       tags: [payouts]
       operationId: approvePayout
-      summary: Подтвердить крупную выплату (по политике порогов, по умолчанию двумя операторами)
+      summary: Approve a large payout (by the threshold policy, two operators by default)
       description: >
-        Число голосов - по политике порогов апрува (по умолчанию два разных
-        оператора); повторный голос того же оператора - 409 (голос неизменяем).
-        Субъект действия выводится из bearer-токена: оператор в токене и
-        operator_id тела обязаны совпадать, иначе 403; аудит ведется по
-        субъекту токена.
+        The number of votes follows the approval threshold policy (two
+        different operators by default); a second vote by the same operator
+        returns 409 (a vote is immutable). The acting subject is derived from
+        the bearer token: the operator in the token and the body operator_id
+        must match, otherwise 403; the audit is recorded against the token
+        subject.
       parameters:
         - $ref: '#/components/parameters/PayoutID'
       requestBody:
@@ -39,7 +40,7 @@ paths:
               $ref: '#/components/schemas/PayoutDecisionRequest'
       responses:
         '200':
-          description: Решение принято
+          description: The decision is accepted
           content:
             application/json:
               schema:
@@ -58,12 +59,12 @@ paths:
     post:
       tags: [payouts]
       operationId: rejectPayout
-      summary: Отклонить крупную выплату
+      summary: Reject a large payout
       description: >
-        Вето: одного отклонения достаточно для перехода выплаты в rejected;
-        поле reason обязательно и непусто. Субъект действия выводится из
-        bearer-токена: оператор в токене и operator_id тела обязаны совпадать,
-        иначе 403.
+        Veto: a single rejection is enough for the payout to move to rejected;
+        the reason field is required and must not be empty. The acting subject
+        is derived from the bearer token: the operator in the token and the
+        body operator_id must match, otherwise 403.
       parameters:
         - $ref: '#/components/parameters/PayoutID'
       requestBody:
@@ -74,7 +75,7 @@ paths:
               $ref: '#/components/schemas/PayoutDecisionRequest'
       responses:
         '200':
-          description: Решение принято
+          description: The decision is accepted
           content:
             application/json:
               schema:
@@ -93,10 +94,10 @@ paths:
     get:
       tags: [routing]
       operationId: listRoutingRules
-      summary: Правила маршрутизации провайдеров
+      summary: Provider routing rules
       responses:
         '200':
-          description: Текущая ревизия правил
+          description: Current revision of the rules
           content:
             application/json:
               schema:
@@ -108,14 +109,14 @@ paths:
     put:
       tags: [routing]
       operationId: putRoutingRules
-      summary: Заменить правила маршрутизации (полное замещение ревизии)
+      summary: Replace routing rules (full revision replacement)
       description: >
-        Замещает набор правил целиком. revision - ревизия, полученная из
-        последнего GET; при несовпадении с текущей - 409 (защита от гонки двух
-        операторов). Требуется отдельная RBAC-роль управления маршрутизацией
-        (12.1): право апрува выплат не дает права менять маршруты. Применение
-        асинхронное: кеш маршрутизации Connector обновляется в течение 30 - 60 с
-        (CBL-003 раздел 7).
+        Replaces the rule set entirely. revision is the revision obtained from
+        the last GET; a mismatch with the current one returns 409 (protection
+        against a race between two operators). A separate RBAC role for routing
+        management is required (12.1): the payout approval right does not grant
+        the right to change routes. Application is asynchronous: the Connector
+        routing cache is refreshed within 30 - 60 s (CBL-003 section 7).
       requestBody:
         required: true
         content:
@@ -124,7 +125,7 @@ paths:
               $ref: '#/components/schemas/RoutingRuleSet'
       responses:
         '200':
-          description: Новая ревизия правил сохранена
+          description: The new rules revision is saved
           content:
             application/json:
               schema:
@@ -143,7 +144,7 @@ paths:
     get:
       tags: [reconciliation]
       operationId: listDiscrepancies
-      summary: Расхождения сверки
+      summary: Reconciliation discrepancies
       parameters:
         - name: severity
           in: query
@@ -154,12 +155,12 @@ paths:
           in: query
           schema:
             type: string
-          description: Фильтр по мерчанту (пусто - системные и все прочие)
+          description: Filter by merchant (empty means system and all other discrepancies)
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/Cursor'
       responses:
         '200':
-          description: Страница расхождений
+          description: A page of discrepancies
           content:
             application/json:
               schema:
@@ -179,12 +180,12 @@ paths:
     post:
       tags: [reconciliation]
       operationId: resolveDiscrepancy
-      summary: Разрешить расхождение вручную
+      summary: Resolve a discrepancy manually
       description: >
-        Повторное разрешение уже разрешенного расхождения - 409. Субъект
-        действия выводится из bearer-токена: оператор в токене и operator_id
-        тела обязаны совпадать, иначе 403. Исполнение ручных корректировок
-        (manual_adjustment) - 12.3.
+        Resolving an already resolved discrepancy again returns 409. The
+        acting subject is derived from the bearer token: the operator in the
+        token and the body operator_id must match, otherwise 403. Execution of
+        manual adjustments (manual_adjustment) is task 12.3.
       parameters:
         - name: id
           in: path
@@ -199,7 +200,7 @@ paths:
               $ref: '#/components/schemas/DiscrepancyResolveRequest'
       responses:
         '200':
-          description: Расхождение разрешено
+          description: The discrepancy is resolved
           content:
             application/json:
               schema:
@@ -218,10 +219,10 @@ paths:
     post:
       tags: [providers]
       operationId: disableProvider
-      summary: Отключить провайдера вручную
+      summary: Disable a provider manually
       description: >
-        Повторное отключение уже отключенного провайдера идемпотентно: 204 без
-        новой записи аудита. Причина опциональна.
+        Disabling an already disabled provider is idempotent: 204 without a
+        new audit record. The reason is optional.
       parameters:
         - name: id
           in: path
@@ -239,7 +240,7 @@ paths:
                   type: string
       responses:
         '204':
-          description: Провайдер отключен
+          description: The provider is disabled
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -253,7 +254,7 @@ components:
     bearerAuth:
       type: http
       scheme: bearer
-      description: Токен оператора с RBAC
+      description: Operator token with RBAC
   parameters:
     PayoutID:
       name: id
@@ -276,25 +277,25 @@ components:
         type: string
   responses:
     Problem:
-      description: Ошибка в формате application/problem+json (RFC 9457)
+      description: Error in the application/problem+json format (RFC 9457)
       content:
         application/problem+json:
           schema:
             $ref: '#/components/schemas/Problem'
     BadRequest:
-      description: Ошибка формата запроса (application/problem+json, RFC 9457)
+      description: Request format error (application/problem+json, RFC 9457)
       content:
         application/problem+json:
           schema:
             $ref: '#/components/schemas/Problem'
     Unauthorized:
-      description: Отсутствует или недействителен токен оператора
+      description: The operator token is missing or invalid
       content:
         application/problem+json:
           schema:
             $ref: '#/components/schemas/Problem'
     Forbidden:
-      description: Недостаточно прав RBAC для действия
+      description: Insufficient RBAC rights for the action
       content:
         application/problem+json:
           schema:
@@ -325,11 +326,12 @@ components:
         operator_id:
           type: string
           description: >
-            Идентификатор оператора, голосующего за решение; обязан совпадать с
-            субъектом bearer-токена, иначе 403 (аудит - по субъекту токена)
+            Identifier of the operator voting for the decision; must match the
+            bearer token subject, otherwise 403 (the audit is recorded against
+            the token subject)
         reason:
           type: string
-          description: Обязателен и непуст для reject (иначе 422)
+          description: Required and non-empty for reject (otherwise 422)
     PayoutAdmin:
       type: object
       properties:
@@ -348,7 +350,7 @@ components:
     Money:
       type: string
       pattern: '^[0-9]+(\.[0-9]+)?$'
-      description: Строка-десятичное число в единицах актива, float запрещен
+      description: Decimal string in asset units, float is forbidden
     RoutingRuleSet:
       type: object
       additionalProperties: false
@@ -358,7 +360,8 @@ components:
           type: integer
           format: int64
           description: >
-            Ревизия набора; при PUT - полученная из последнего GET, иначе 409
+            Set revision; on PUT it is the revision obtained from the last
+            GET, otherwise 409
         items:
           type: array
           minItems: 1
@@ -398,10 +401,10 @@ components:
           enum: [missing_in_ledger, amount_mismatch, status_mismatch]
         ref_id:
           type: string
-          description: Идентификатор сущности расхождения (payment_id/payout_id)
+          description: Identifier of the discrepancy entity (payment_id/payout_id)
         merchant_id:
           type: string
-          description: Мерчант-владелец расхождения; пусто для системных
+          description: Merchant that owns the discrepancy; empty for system ones
         severity:
           type: string
           enum: [info, warning, critical]
@@ -423,8 +426,8 @@ components:
         operator_id:
           type: string
           description: >
-            Идентификатор оператора; обязан совпадать с субъектом bearer-токена,
-            иначе 403 (аудит - по субъекту токена)
+            Operator identifier; must match the bearer token subject,
+            otherwise 403 (the audit is recorded against the token subject)
         resolution:
           type: string
           enum: [confirm_platform, confirm_gateway, manual_adjustment]

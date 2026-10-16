@@ -6,50 +6,50 @@ import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/cbl/cbl-protos/gen/go/billing/reporting/v1;reportingv1";
 
-// QueryRequest описывает запрос отчета из ClickHouse.
-// merchant_id заполняет Billing API из токена мерчанта (11.4), а не из
-// пользовательского запроса; прямые gRPC-вызовы внутренние. period_from и
-// period_to задают период в UTC (границы включаются), незаданные значения -
-// без ограничения. cursor непрозрачен для вызывающего и берется из
-// next_cursor предыдущей страницы.
+// QueryRequest describes a report query to ClickHouse.
+// merchant_id is filled by the Billing API from the merchant token (11.4), not
+// from the user request; direct gRPC calls are internal. period_from and
+// period_to set the period in UTC (bounds inclusive); unset values impose no
+// restriction. cursor is opaque to the caller and is taken from next_cursor of
+// the previous page.
 message QueryRequest {
-  // ReportType задает идентификатор отчета из каталога 11.4/15.4.
+  // ReportType specifies the report identifier from the 11.4/15.4 catalog.
   string report_type = 1;
-  // MerchantID задает мерчанта-владельца данных (из токена при проксировании).
+  // MerchantID specifies the merchant that owns the data (from the token when proxied).
   string merchant_id = 2;
-  // PeriodFrom задает начало периода в UTC включительно.
+  // PeriodFrom specifies the start of the period in UTC, inclusive.
   google.protobuf.Timestamp period_from = 3;
-  // PeriodTo задает конец периода в UTC включительно.
+  // PeriodTo specifies the end of the period in UTC, inclusive.
   google.protobuf.Timestamp period_to = 4;
-  // GroupBy задает измерение группировки строк отчета.
+  // GroupBy specifies the report row grouping dimension.
   string group_by = 5;
-  // Limit задает размер страницы; 0 - серверный дефолт 20 (как Limit в
-  // billing.v1.yaml), максимум 100.
+  // Limit specifies the page size; 0 for the server default of 20 (as Limit in
+  // billing.v1.yaml), maximum 100.
   uint32 limit = 6;
-  // Cursor задает непрозрачный курсор продолжения.
+  // Cursor specifies the opaque continuation cursor.
   string cursor = 7;
 }
 
-// ReportRow описывает строку отчета: деньги и суммы передаются строками.
+// ReportRow describes a report row: money and amounts are passed as strings.
 message ReportRow {
-  // Values задает значения колонок строки; все значения - строки,
-  // денежные суммы и курсы - десятичные строки канонического вида
-  // ^-?(0|[1-9][0-9]*)(\.[0-9]+)?$ (без экспоненты, float запрещен).
+  // Values specifies the row column values; all values are strings, money
+  // amounts and rates are decimal strings in canonical form
+  // ^-?(0|[1-9][0-9]*)(\.[0-9]+)?$ (no exponent, float is forbidden).
   map<string, string> values = 1;
 }
 
-// QueryResponse возвращает страницу отчета.
+// QueryResponse returns a page of the report.
 message QueryResponse {
-  // Rows задает строки текущей страницы.
+  // Rows specifies the rows of the current page.
   repeated ReportRow rows = 1;
-  // NextCursor задает курсор следующей страницы; пусто - конец отчета.
+  // NextCursor specifies the cursor of the next page; empty means the end of the report.
   string next_cursor = 2;
 }
 
-// ReportingService отдает отчеты по данным ClickHouse (дедлайн RPC 5 с,
-// CBL-003 раздел 5); сервис только читает ClickHouse и не участвует
-// в денежном контуре.
+// ReportingService serves reports from ClickHouse data (RPC deadline 5 s,
+// CBL-003 section 5); the service only reads ClickHouse and does not
+// participate in the money path.
 service ReportingService {
-  // Query возвращает страницу отчета.
+  // Query returns a page of the report.
   rpc Query(QueryRequest) returns (QueryResponse);
 }

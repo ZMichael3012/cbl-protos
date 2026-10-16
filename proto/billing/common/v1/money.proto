@@ -4,18 +4,18 @@ package billing.common.v1;
 
 option go_package = "github.com/cbl/cbl-protos/gen/go/billing/common/v1;commonv1";
 
-// Money описывает денежную сумму в минимальных единицах актива.
-// Внутри систем используется int64 в минимальных единицах плюс decimals, float запрещен.
+// Money describes a monetary amount in asset minor units.
+// Within the system int64 in minor units plus decimals is used; float is forbidden.
 message Money {
-  // MinorUnits задает сумму в минимальных единицах актива.
+  // MinorUnits specifies the amount in asset minor units.
   int64 minor_units = 1;
-  // Asset задает код актива, например USDT или BTC.
+  // Asset specifies the asset code, for example USDT or BTC.
   string asset = 2;
-  // Decimals задает число знаков после точки для отображения и парсинга.
+  // Decimals specifies the number of decimal places for display and parsing.
   uint32 decimals = 3;
 }
 
-// Direction задает направление проводки в двойной записи.
+// Direction specifies the posting direction in double entry.
 enum Direction {
   DIRECTION_UNSPECIFIED = 0;
   DIRECTION_DEBIT = 1;

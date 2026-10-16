@@ -29,7 +29,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
-// ConnectorService абстрагирует внешние крипто-шлюзы.
+// ConnectorService abstracts external crypto gateways.
 type ConnectorServiceClient interface {
 	CreateInvoice(ctx context.Context, in *CreateInvoiceRequest, opts ...grpc.CallOption) (*CreateInvoiceResponse, error)
 	GetGatewayPayment(ctx context.Context, in *GetGatewayPaymentRequest, opts ...grpc.CallOption) (*GetGatewayPaymentResponse, error)
@@ -89,7 +89,7 @@ func (c *connectorServiceClient) GetCapabilities(ctx context.Context, in *GetCap
 // All implementations must embed UnimplementedConnectorServiceServer
 // for forward compatibility.
 //
-// ConnectorService абстрагирует внешние крипто-шлюзы.
+// ConnectorService abstracts external crypto gateways.
 type ConnectorServiceServer interface {
 	CreateInvoice(context.Context, *CreateInvoiceRequest) (*CreateInvoiceResponse, error)
 	GetGatewayPayment(context.Context, *GetGatewayPaymentRequest) (*GetGatewayPaymentResponse, error)

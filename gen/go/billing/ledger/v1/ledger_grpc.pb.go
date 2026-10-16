@@ -32,7 +32,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
-// LedgerService ведет двойную запись, резервы и балансы.
+// LedgerService maintains double entry, reserves and balances.
 type LedgerServiceClient interface {
 	PostTransaction(ctx context.Context, in *PostTransactionRequest, opts ...grpc.CallOption) (*PostTransactionResponse, error)
 	Reserve(ctx context.Context, in *ReserveRequest, opts ...grpc.CallOption) (*ReserveResponse, error)
@@ -40,8 +40,8 @@ type LedgerServiceClient interface {
 	ReleaseReserve(ctx context.Context, in *ReleaseReserveRequest, opts ...grpc.CallOption) (*ReleaseReserveResponse, error)
 	GetBalance(ctx context.Context, in *GetBalanceRequest, opts ...grpc.CallOption) (*GetBalanceResponse, error)
 	ListEntries(ctx context.Context, in *ListEntriesRequest, opts ...grpc.CallOption) (*ListEntriesResponse, error)
-	// ListMerchantAccounts возвращает счета мерчанта с балансами (аддитивно
-	// cf-3.2, CBL-2.10; предпосылка 7.4 - балансы и ownership счетов BFF).
+	// ListMerchantAccounts returns merchant accounts with balances (additive
+	// cf-3.2, CBL-2.10; prerequisite 7.4 - balances and account ownership for the BFF).
 	ListMerchantAccounts(ctx context.Context, in *ListMerchantAccountsRequest, opts ...grpc.CallOption) (*ListMerchantAccountsResponse, error)
 }
 
@@ -127,7 +127,7 @@ func (c *ledgerServiceClient) ListMerchantAccounts(ctx context.Context, in *List
 // All implementations must embed UnimplementedLedgerServiceServer
 // for forward compatibility.
 //
-// LedgerService ведет двойную запись, резервы и балансы.
+// LedgerService maintains double entry, reserves and balances.
 type LedgerServiceServer interface {
 	PostTransaction(context.Context, *PostTransactionRequest) (*PostTransactionResponse, error)
 	Reserve(context.Context, *ReserveRequest) (*ReserveResponse, error)
@@ -135,8 +135,8 @@ type LedgerServiceServer interface {
 	ReleaseReserve(context.Context, *ReleaseReserveRequest) (*ReleaseReserveResponse, error)
 	GetBalance(context.Context, *GetBalanceRequest) (*GetBalanceResponse, error)
 	ListEntries(context.Context, *ListEntriesRequest) (*ListEntriesResponse, error)
-	// ListMerchantAccounts возвращает счета мерчанта с балансами (аддитивно
-	// cf-3.2, CBL-2.10; предпосылка 7.4 - балансы и ownership счетов BFF).
+	// ListMerchantAccounts returns merchant accounts with balances (additive
+	// cf-3.2, CBL-2.10; prerequisite 7.4 - balances and account ownership for the BFF).
 	ListMerchantAccounts(context.Context, *ListMerchantAccountsRequest) (*ListMerchantAccountsResponse, error)
 	mustEmbedUnimplementedLedgerServiceServer()
 }

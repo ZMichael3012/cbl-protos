@@ -20,7 +20,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// Direction задает направление проводки в двойной записи.
+// Direction specifies the posting direction in double entry.
 type Direction int32
 
 const (
@@ -70,18 +70,18 @@ func (Direction) EnumDescriptor() ([]byte, []int) {
 	return file_billing_common_v1_money_proto_rawDescGZIP(), []int{0}
 }
 
-// Money описывает денежную сумму в минимальных единицах актива.
-// Внутри систем используется int64 в минимальных единицах плюс decimals, float запрещен.
+// Money describes a monetary amount in asset minor units.
+// Within the system int64 in minor units plus decimals is used; float is forbidden.
 type Money struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// MinorUnits задает сумму в минимальных единицах актива.
+	// MinorUnits specifies the amount in asset minor units.
 	MinorUnits int64 `protobuf:"varint,1,opt,name=minor_units,json=minorUnits,proto3" json:"minor_units,omitempty"`
-	// Asset задает код актива, например USDT или BTC.
+	// Asset specifies the asset code, for example USDT or BTC.
 	Asset string `protobuf:"bytes,2,opt,name=asset,proto3" json:"asset,omitempty"`
-	// Decimals задает число знаков после точки для отображения и парсинга.
+	// Decimals specifies the number of decimal places for display and parsing.
 	Decimals uint32 `protobuf:"varint,3,opt,name=decimals,proto3" json:"decimals,omitempty"`
 }
 

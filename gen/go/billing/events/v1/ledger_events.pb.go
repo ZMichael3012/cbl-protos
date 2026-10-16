@@ -22,7 +22,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// LedgerEventType описывает типы событий леджера.
+// LedgerEventType describes ledger event types.
 type LedgerEventType int32
 
 const (
@@ -78,7 +78,7 @@ func (LedgerEventType) EnumDescriptor() ([]byte, []int) {
 	return file_billing_events_v1_ledger_events_proto_rawDescGZIP(), []int{0}
 }
 
-// LedgerEntry описывает проводку в событии леджера.
+// LedgerEntry describes an entry in a ledger event.
 type LedgerEntry struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -142,12 +142,13 @@ func (x *LedgerEntry) GetAmount() *v1.Money {
 	return nil
 }
 
-// LedgerEvent описывает событие леджера для топика ledger.events.
-// Семантика по типам (CF-2): transaction.posted несет полный набор entries;
-// reserve.created и reserve.released не создают проводок (удержание), entries
-// пуст, transaction_id пуст, идентификация - ref_type/ref_id и сумма операции
-// через gRPC леджера; reserve.committed несет сбалансированные entries захвата.
-// occurred_at в теле - время события; заголовок конверта зеркалит его.
+// LedgerEvent describes a ledger event for the ledger.events topic.
+// Semantics by type (CF-2): transaction.posted carries the full set of entries;
+// reserve.created and reserve.released do not create postings (hold): entries
+// is empty, transaction_id is empty, identification is by ref_type/ref_id and
+// the operation amount through the ledger gRPC; reserve.committed carries
+// balanced capture entries. occurred_at in the body is the event time; the
+// envelope header mirrors it.
 type LedgerEvent struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

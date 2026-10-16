@@ -7,7 +7,7 @@ import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/cbl/cbl-protos/gen/go/billing/payment/v1;paymentv1";
 
-// PaymentState описывает состояния конечного автомата платежа.
+// PaymentState describes payment state machine states.
 enum PaymentState {
   PAYMENT_STATE_UNSPECIFIED = 0;
   PAYMENT_STATE_CREATING = 1;
@@ -23,17 +23,17 @@ enum PaymentState {
   PAYMENT_STATE_CANCELLED = 11;
 }
 
-// TimelineItem описывает одну запись истории состояний платежа.
+// TimelineItem describes one payment state history record.
 message TimelineItem {
   PaymentState state = 1;
   google.protobuf.Timestamp occurred_at = 2;
   string comment = 3;
 }
 
-// Payment описывает платеж и его текущее состояние. expected_amount несет
-// сумму и актив оплаты: REST-поля мерчант-инвойса pay_amount/pay_asset
-// выводятся из него; rate и locked_until описывают зафиксированную котировку
-// курса (заполняются 4.2 в creating/created; REST quote{rate, locked_until}).
+// Payment describes a payment and its current state. expected_amount carries
+// the payment amount and asset: the merchant invoice REST fields pay_amount and
+// pay_asset are derived from it; rate and locked_until describe the locked rate
+// quote (filled by 4.2 in creating/created; REST quote{rate, locked_until}).
 message Payment {
   string payment_id = 1;
   string merchant_id = 2;
@@ -47,17 +47,17 @@ message Payment {
   google.protobuf.Timestamp created_at = 10;
   google.protobuf.Timestamp expires_at = 11;
   repeated TimelineItem timeline = 12;
-  // Rate задает зафиксированный курс десятичной строкой (аддитивно cf-3.3).
+  // Rate specifies the locked rate as a decimal string (additive cf-3.3).
   string rate = 13;
-  // LockedUntil задает срок фиксации котировки (аддитивно cf-3.3).
+  // LockedUntil specifies the quote lock deadline (additive cf-3.3).
   google.protobuf.Timestamp locked_until = 14;
-  // Txid задает хэш транзакции сети (аддитивно cf-3.4).
+  // Txid specifies the network transaction hash (additive cf-3.4).
   string txid = 15;
-  // Confirmations задает число подтверждений сети (аддитивно cf-3.4).
+  // Confirmations specifies the number of network confirmations (additive cf-3.4).
   uint32 confirmations = 16;
 }
 
-// CreatePaymentRequest создает платеж с фиксацией котировки курса.
+// CreatePaymentRequest creates a payment and locks the rate quote.
 message CreatePaymentRequest {
   string idempotency_key = 1;
   string merchant_id = 2;
@@ -67,66 +67,67 @@ message CreatePaymentRequest {
   google.protobuf.Timestamp expires_at = 6;
 }
 
-// CreatePaymentResponse возвращает созданный платеж и реквизиты оплаты.
+// CreatePaymentResponse returns the created payment and payment details.
 message CreatePaymentResponse {
   string payment_id = 1;
   PaymentState state = 2;
   string pay_address = 3;
   string quote_id = 4;
   google.protobuf.Timestamp expires_at = 5;
-  // Rate задает зафиксированный курс десятичной строкой (аддитивно cf-3.3).
+  // Rate specifies the locked rate as a decimal string (additive cf-3.3).
   string rate = 6;
-  // LockedUntil задает срок фиксации котировки (аддитивно cf-3.3).
+  // LockedUntil specifies the quote lock deadline (additive cf-3.3).
   google.protobuf.Timestamp locked_until = 7;
-  // ExpectedAmount задает зафиксированную сумму и актив оплаты (аддитивно
-  // cf-3.4): источник pay_amount/pay_asset ответа 201 счета мерчанта 7.4.
+  // ExpectedAmount specifies the locked payment amount and asset (additive
+  // cf-3.4): the source of pay_amount/pay_asset in the 201 merchant invoice
+  // response, 7.4.
   billing.common.v1.Money expected_amount = 8;
 }
 
-// GetPaymentRequest запрашивает платеж по идентификатору.
+// GetPaymentRequest requests a payment by identifier.
 message GetPaymentRequest {
   string payment_id = 1;
 }
 
-// GetPaymentResponse возвращает платеж с историей состояний.
+// GetPaymentResponse returns the payment with its state history.
 message GetPaymentResponse {
   Payment payment = 1;
 }
 
-// ListPaymentsRequest запрашивает страницу платежей с курсорной пагинацией.
-// merchant_id обязателен (владелец из токена); created_from и created_to
-// фильтруют по времени создания (from включительно, to исключительно,
-// незаданные границы не ограничивают); cursor - непрозрачное значение
-// next_cursor из предыдущего ответа (порядок created_at DESC, id DESC).
+// ListPaymentsRequest requests a page of payments with cursor pagination.
+// merchant_id is required (owner from the token); created_from and created_to
+// filter by creation time (from inclusive, to exclusive; unset bounds do not
+// restrict); cursor is the opaque next_cursor value from the previous response
+// (order created_at DESC, id DESC).
 message ListPaymentsRequest {
   string merchant_id = 1;
   PaymentState state_filter = 2;
   uint32 limit = 3;
   string cursor = 4;
-  // CreatedFrom задает нижнюю границу периода включительно (аддитивно cf-3.3).
+  // CreatedFrom specifies the lower period bound, inclusive (additive cf-3.3).
   google.protobuf.Timestamp created_from = 5;
-  // CreatedTo задает верхнюю границу периода исключительно (аддитивно cf-3.3).
+  // CreatedTo specifies the upper period bound, exclusive (additive cf-3.3).
   google.protobuf.Timestamp created_to = 6;
 }
 
-// ListPaymentsResponse возвращает страницу платежей.
+// ListPaymentsResponse returns a page of payments.
 message ListPaymentsResponse {
   repeated Payment payments = 1;
   string next_cursor = 2;
 }
 
-// CancelPaymentRequest отменяет платеж до обнаружения оплаты.
+// CancelPaymentRequest cancels a payment before payment detection.
 message CancelPaymentRequest {
   string payment_id = 1;
   string idempotency_key = 2;
 }
 
-// CancelPaymentResponse возвращает состояние отмененного платежа.
+// CancelPaymentResponse returns the state of the cancelled payment.
 message CancelPaymentResponse {
   Payment payment = 1;
 }
 
-// PaymentService управляет жизненным циклом платежа.
+// PaymentService manages the payment lifecycle.
 service PaymentService {
   rpc CreatePayment(CreatePaymentRequest) returns (CreatePaymentResponse);
   rpc GetPayment(GetPaymentRequest) returns (GetPaymentResponse);

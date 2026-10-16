@@ -4,38 +4,38 @@ package billing.notification.v1;
 
 option go_package = "github.com/cbl/cbl-protos/gen/go/billing/notification/v1;notificationv1";
 
-// RegisterWebhookEndpointRequest регистрирует URL вебхуков мерчанта.
-// merchant_id заполняет Billing API из токена (7.x); события - каталог типов
-// контракта доставки openapi/webhooks.v1.yaml (CF-3), неизвестные типы
-// отклоняются INVALID_ARGUMENT.
+// RegisterWebhookEndpointRequest registers a merchant webhook URL.
+// merchant_id is filled by the Billing API from the token (7.x); events is the
+// catalog of delivery contract types openapi/webhooks.v1.yaml (CF-3); unknown
+// types are rejected with INVALID_ARGUMENT.
 message RegisterWebhookEndpointRequest {
-  // IdempotencyKey задает ключ идемпотентности регистрации.
+  // IdempotencyKey specifies the registration idempotency key.
   string idempotency_key = 1;
-  // MerchantID задает мерчанта-владельца эндпоинта.
+  // MerchantID specifies the merchant that owns the endpoint.
   string merchant_id = 2;
-  // URL задает https-адрес доставки (SSRF-проверки на стороне Notification).
+  // URL specifies the https delivery address (SSRF checks on the Notification side).
   string url = 3;
-  // Events задает типы событий из каталога CF-3; пустой список недопустим.
+  // Events specifies the event types from the CF-3 catalog; an empty list is not allowed.
   repeated string events = 4;
 }
 
-// RegisterWebhookEndpointResponse возвращает созданный эндпоинт.
+// RegisterWebhookEndpointResponse returns the created endpoint.
 message RegisterWebhookEndpointResponse {
-  // EndpointID задает идентификатор эндпоинта.
+  // EndpointID specifies the endpoint identifier.
   string endpoint_id = 1;
-  // URL задает зарегистрированный адрес доставки.
+  // URL specifies the registered delivery address.
   string url = 2;
-  // Events задает принятые типы событий.
+  // Events specifies the accepted event types.
   repeated string events = 3;
-  // SigningSecret задает секрет подписи; показывается один раз и не хранится
-  // в открытом виде после регистрации.
+  // SigningSecret specifies the signing secret; it is shown once and is not
+  // stored in plaintext after registration.
   string signing_secret = 4;
 }
 
-// NotificationService управляет эндпоинтами доставки вебхуков мерчантов.
-// Служебный сервис для Billing API (7.x) и Back-office (12.x); наружу
-// публикуется только REST мерчанта/оператора.
+// NotificationService manages merchant webhook delivery endpoints.
+// An internal service for the Billing API (7.x) and the Back-office (12.x);
+// only the merchant/operator REST is exposed externally.
 service NotificationService {
-  // RegisterWebhookEndpoint регистрирует эндпоинт и выдает секрет подписи.
+  // RegisterWebhookEndpoint registers an endpoint and issues the signing secret.
   rpc RegisterWebhookEndpoint(RegisterWebhookEndpointRequest) returns (RegisterWebhookEndpointResponse);
 }

@@ -20,22 +20,22 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// RegisterWebhookEndpointRequest регистрирует URL вебхуков мерчанта.
-// merchant_id заполняет Billing API из токена (7.x); события - каталог типов
-// контракта доставки openapi/webhooks.v1.yaml (CF-3), неизвестные типы
-// отклоняются INVALID_ARGUMENT.
+// RegisterWebhookEndpointRequest registers a merchant webhook URL.
+// merchant_id is filled by the Billing API from the token (7.x); events is the
+// catalog of delivery contract types openapi/webhooks.v1.yaml (CF-3); unknown
+// types are rejected with INVALID_ARGUMENT.
 type RegisterWebhookEndpointRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// IdempotencyKey задает ключ идемпотентности регистрации.
+	// IdempotencyKey specifies the registration idempotency key.
 	IdempotencyKey string `protobuf:"bytes,1,opt,name=idempotency_key,json=idempotencyKey,proto3" json:"idempotency_key,omitempty"`
-	// MerchantID задает мерчанта-владельца эндпоинта.
+	// MerchantID specifies the merchant that owns the endpoint.
 	MerchantId string `protobuf:"bytes,2,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`
-	// URL задает https-адрес доставки (SSRF-проверки на стороне Notification).
+	// URL specifies the https delivery address (SSRF checks on the Notification side).
 	Url string `protobuf:"bytes,3,opt,name=url,proto3" json:"url,omitempty"`
-	// Events задает типы событий из каталога CF-3; пустой список недопустим.
+	// Events specifies the event types from the CF-3 catalog; an empty list is not allowed.
 	Events []string `protobuf:"bytes,4,rep,name=events,proto3" json:"events,omitempty"`
 }
 
@@ -99,20 +99,20 @@ func (x *RegisterWebhookEndpointRequest) GetEvents() []string {
 	return nil
 }
 
-// RegisterWebhookEndpointResponse возвращает созданный эндпоинт.
+// RegisterWebhookEndpointResponse returns the created endpoint.
 type RegisterWebhookEndpointResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// EndpointID задает идентификатор эндпоинта.
+	// EndpointID specifies the endpoint identifier.
 	EndpointId string `protobuf:"bytes,1,opt,name=endpoint_id,json=endpointId,proto3" json:"endpoint_id,omitempty"`
-	// URL задает зарегистрированный адрес доставки.
+	// URL specifies the registered delivery address.
 	Url string `protobuf:"bytes,2,opt,name=url,proto3" json:"url,omitempty"`
-	// Events задает принятые типы событий.
+	// Events specifies the accepted event types.
 	Events []string `protobuf:"bytes,3,rep,name=events,proto3" json:"events,omitempty"`
-	// SigningSecret задает секрет подписи; показывается один раз и не хранится
-	// в открытом виде после регистрации.
+	// SigningSecret specifies the signing secret; it is shown once and is not
+	// stored in plaintext after registration.
 	SigningSecret string `protobuf:"bytes,4,opt,name=signing_secret,json=signingSecret,proto3" json:"signing_secret,omitempty"`
 }
 

@@ -22,7 +22,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// LockQuoteRequest фиксирует курс на время жизни счета.
+// LockQuoteRequest locks the rate for the invoice lifetime.
 type LockQuoteRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -94,7 +94,7 @@ func (x *LockQuoteRequest) GetTtlSeconds() uint32 {
 	return 0
 }
 
-// LockQuoteResponse возвращает зафиксированную котировку.
+// LockQuoteResponse returns the locked quote.
 type LockQuoteResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -158,7 +158,7 @@ func (x *LockQuoteResponse) GetLockedUntil() *timestamppb.Timestamp {
 	return nil
 }
 
-// GetRateRequest запрашивает текущий курс пары активов.
+// GetRateRequest requests the current rate of an asset pair.
 type GetRateRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -214,7 +214,7 @@ func (x *GetRateRequest) GetQuoteAsset() string {
 	return ""
 }
 
-// GetRateResponse возвращает текущий курс и время его получения.
+// GetRateResponse returns the current rate and the time it was obtained.
 type GetRateResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

@@ -22,7 +22,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// PaymentState описывает состояния конечного автомата платежа.
+// PaymentState describes payment state machine states.
 type PaymentState int32
 
 const (
@@ -99,7 +99,7 @@ func (PaymentState) EnumDescriptor() ([]byte, []int) {
 	return file_billing_payment_v1_payment_proto_rawDescGZIP(), []int{0}
 }
 
-// TimelineItem описывает одну запись истории состояний платежа.
+// TimelineItem describes one payment state history record.
 type TimelineItem struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -163,10 +163,10 @@ func (x *TimelineItem) GetComment() string {
 	return ""
 }
 
-// Payment описывает платеж и его текущее состояние. expected_amount несет
-// сумму и актив оплаты: REST-поля мерчант-инвойса pay_amount/pay_asset
-// выводятся из него; rate и locked_until описывают зафиксированную котировку
-// курса (заполняются 4.2 в creating/created; REST quote{rate, locked_until}).
+// Payment describes a payment and its current state. expected_amount carries
+// the payment amount and asset: the merchant invoice REST fields pay_amount and
+// pay_asset are derived from it; rate and locked_until describe the locked rate
+// quote (filled by 4.2 in creating/created; REST quote{rate, locked_until}).
 type Payment struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -184,13 +184,13 @@ type Payment struct {
 	CreatedAt      *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	ExpiresAt      *timestamppb.Timestamp `protobuf:"bytes,11,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
 	Timeline       []*TimelineItem        `protobuf:"bytes,12,rep,name=timeline,proto3" json:"timeline,omitempty"`
-	// Rate задает зафиксированный курс десятичной строкой (аддитивно cf-3.3).
+	// Rate specifies the locked rate as a decimal string (additive cf-3.3).
 	Rate string `protobuf:"bytes,13,opt,name=rate,proto3" json:"rate,omitempty"`
-	// LockedUntil задает срок фиксации котировки (аддитивно cf-3.3).
+	// LockedUntil specifies the quote lock deadline (additive cf-3.3).
 	LockedUntil *timestamppb.Timestamp `protobuf:"bytes,14,opt,name=locked_until,json=lockedUntil,proto3" json:"locked_until,omitempty"`
-	// Txid задает хэш транзакции сети (аддитивно cf-3.4).
+	// Txid specifies the network transaction hash (additive cf-3.4).
 	Txid string `protobuf:"bytes,15,opt,name=txid,proto3" json:"txid,omitempty"`
-	// Confirmations задает число подтверждений сети (аддитивно cf-3.4).
+	// Confirmations specifies the number of network confirmations (additive cf-3.4).
 	Confirmations uint32 `protobuf:"varint,16,opt,name=confirmations,proto3" json:"confirmations,omitempty"`
 }
 
@@ -338,7 +338,7 @@ func (x *Payment) GetConfirmations() uint32 {
 	return 0
 }
 
-// CreatePaymentRequest создает платеж с фиксацией котировки курса.
+// CreatePaymentRequest creates a payment and locks the rate quote.
 type CreatePaymentRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -426,7 +426,7 @@ func (x *CreatePaymentRequest) GetExpiresAt() *timestamppb.Timestamp {
 	return nil
 }
 
-// CreatePaymentResponse возвращает созданный платеж и реквизиты оплаты.
+// CreatePaymentResponse returns the created payment and payment details.
 type CreatePaymentResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -437,12 +437,13 @@ type CreatePaymentResponse struct {
 	PayAddress string                 `protobuf:"bytes,3,opt,name=pay_address,json=payAddress,proto3" json:"pay_address,omitempty"`
 	QuoteId    string                 `protobuf:"bytes,4,opt,name=quote_id,json=quoteId,proto3" json:"quote_id,omitempty"`
 	ExpiresAt  *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
-	// Rate задает зафиксированный курс десятичной строкой (аддитивно cf-3.3).
+	// Rate specifies the locked rate as a decimal string (additive cf-3.3).
 	Rate string `protobuf:"bytes,6,opt,name=rate,proto3" json:"rate,omitempty"`
-	// LockedUntil задает срок фиксации котировки (аддитивно cf-3.3).
+	// LockedUntil specifies the quote lock deadline (additive cf-3.3).
 	LockedUntil *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=locked_until,json=lockedUntil,proto3" json:"locked_until,omitempty"`
-	// ExpectedAmount задает зафиксированную сумму и актив оплаты (аддитивно
-	// cf-3.4): источник pay_amount/pay_asset ответа 201 счета мерчанта 7.4.
+	// ExpectedAmount specifies the locked payment amount and asset (additive
+	// cf-3.4): the source of pay_amount/pay_asset in the 201 merchant invoice
+	// response, 7.4.
 	ExpectedAmount *v1.Money `protobuf:"bytes,8,opt,name=expected_amount,json=expectedAmount,proto3" json:"expected_amount,omitempty"`
 }
 
@@ -534,7 +535,7 @@ func (x *CreatePaymentResponse) GetExpectedAmount() *v1.Money {
 	return nil
 }
 
-// GetPaymentRequest запрашивает платеж по идентификатору.
+// GetPaymentRequest requests a payment by identifier.
 type GetPaymentRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -582,7 +583,7 @@ func (x *GetPaymentRequest) GetPaymentId() string {
 	return ""
 }
 
-// GetPaymentResponse возвращает платеж с историей состояний.
+// GetPaymentResponse returns the payment with its state history.
 type GetPaymentResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -630,11 +631,11 @@ func (x *GetPaymentResponse) GetPayment() *Payment {
 	return nil
 }
 
-// ListPaymentsRequest запрашивает страницу платежей с курсорной пагинацией.
-// merchant_id обязателен (владелец из токена); created_from и created_to
-// фильтруют по времени создания (from включительно, to исключительно,
-// незаданные границы не ограничивают); cursor - непрозрачное значение
-// next_cursor из предыдущего ответа (порядок created_at DESC, id DESC).
+// ListPaymentsRequest requests a page of payments with cursor pagination.
+// merchant_id is required (owner from the token); created_from and created_to
+// filter by creation time (from inclusive, to exclusive; unset bounds do not
+// restrict); cursor is the opaque next_cursor value from the previous response
+// (order created_at DESC, id DESC).
 type ListPaymentsRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -644,9 +645,9 @@ type ListPaymentsRequest struct {
 	StateFilter PaymentState `protobuf:"varint,2,opt,name=state_filter,json=stateFilter,proto3,enum=billing.payment.v1.PaymentState" json:"state_filter,omitempty"`
 	Limit       uint32       `protobuf:"varint,3,opt,name=limit,proto3" json:"limit,omitempty"`
 	Cursor      string       `protobuf:"bytes,4,opt,name=cursor,proto3" json:"cursor,omitempty"`
-	// CreatedFrom задает нижнюю границу периода включительно (аддитивно cf-3.3).
+	// CreatedFrom specifies the lower period bound, inclusive (additive cf-3.3).
 	CreatedFrom *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=created_from,json=createdFrom,proto3" json:"created_from,omitempty"`
-	// CreatedTo задает верхнюю границу периода исключительно (аддитивно cf-3.3).
+	// CreatedTo specifies the upper period bound, exclusive (additive cf-3.3).
 	CreatedTo *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=created_to,json=createdTo,proto3" json:"created_to,omitempty"`
 }
 
@@ -724,7 +725,7 @@ func (x *ListPaymentsRequest) GetCreatedTo() *timestamppb.Timestamp {
 	return nil
 }
 
-// ListPaymentsResponse возвращает страницу платежей.
+// ListPaymentsResponse returns a page of payments.
 type ListPaymentsResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -780,7 +781,7 @@ func (x *ListPaymentsResponse) GetNextCursor() string {
 	return ""
 }
 
-// CancelPaymentRequest отменяет платеж до обнаружения оплаты.
+// CancelPaymentRequest cancels a payment before payment detection.
 type CancelPaymentRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -836,7 +837,7 @@ func (x *CancelPaymentRequest) GetIdempotencyKey() string {
 	return ""
 }
 
-// CancelPaymentResponse возвращает состояние отмененного платежа.
+// CancelPaymentResponse returns the state of the cancelled payment.
 type CancelPaymentResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

@@ -22,7 +22,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// ReserveStatus описывает состояние резерва.
+// ReserveStatus describes the reserve state.
 type ReserveStatus int32
 
 const (
@@ -75,7 +75,7 @@ func (ReserveStatus) EnumDescriptor() ([]byte, []int) {
 	return file_billing_ledger_v1_ledger_proto_rawDescGZIP(), []int{0}
 }
 
-// EntryInput описывает проводку во входе транзакции двойной записи.
+// EntryInput describes an entry in a double-entry transaction input.
 type EntryInput struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -139,7 +139,7 @@ func (x *EntryInput) GetAmount() *v1.Money {
 	return nil
 }
 
-// Entry описывает сохраненную проводку.
+// Entry describes a persisted entry.
 type Entry struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -243,7 +243,7 @@ func (x *Entry) GetCreatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
-// AccountBalance описывает доступный и зарезервированный остаток счета.
+// AccountBalance describes the available and reserved account balance.
 type AccountBalance struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -307,7 +307,7 @@ func (x *AccountBalance) GetReserved() *v1.Money {
 	return nil
 }
 
-// PostTransactionRequest создает сбалансированную транзакцию.
+// PostTransactionRequest creates a balanced transaction.
 type PostTransactionRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -379,7 +379,7 @@ func (x *PostTransactionRequest) GetEntries() []*EntryInput {
 	return nil
 }
 
-// PostTransactionResponse возвращает идентификатор транзакции и остатки после проводки.
+// PostTransactionResponse returns the transaction ID and balances after posting.
 type PostTransactionResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -435,7 +435,7 @@ func (x *PostTransactionResponse) GetBalancesAfter() []*AccountBalance {
 	return nil
 }
 
-// ReserveRequest создает резерв средств на счете.
+// ReserveRequest creates a funds reserve on an account.
 type ReserveRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -507,7 +507,7 @@ func (x *ReserveRequest) GetRefId() string {
 	return ""
 }
 
-// ReserveResponse возвращает резерв.
+// ReserveResponse returns the reserve.
 type ReserveResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -563,7 +563,7 @@ func (x *ReserveResponse) GetStatus() ReserveStatus {
 	return ReserveStatus_RESERVE_STATUS_UNSPECIFIED
 }
 
-// CommitReserveRequest превращает резерв в проводку.
+// CommitReserveRequest turns a reserve into a posting.
 type CommitReserveRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -619,7 +619,7 @@ func (x *CommitReserveRequest) GetReserveId() string {
 	return ""
 }
 
-// CommitReserveResponse возвращает состояние резерва.
+// CommitReserveResponse returns the reserve state.
 type CommitReserveResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -675,7 +675,7 @@ func (x *CommitReserveResponse) GetStatus() ReserveStatus {
 	return ReserveStatus_RESERVE_STATUS_UNSPECIFIED
 }
 
-// ReleaseReserveRequest освобождает резерв.
+// ReleaseReserveRequest releases a reserve.
 type ReleaseReserveRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -739,7 +739,7 @@ func (x *ReleaseReserveRequest) GetReason() string {
 	return ""
 }
 
-// ReleaseReserveResponse возвращает состояние резерва.
+// ReleaseReserveResponse returns the reserve state.
 type ReleaseReserveResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -795,7 +795,7 @@ func (x *ReleaseReserveResponse) GetStatus() ReserveStatus {
 	return ReserveStatus_RESERVE_STATUS_UNSPECIFIED
 }
 
-// GetBalanceRequest запрашивает баланс счета.
+// GetBalanceRequest requests an account balance.
 type GetBalanceRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -843,7 +843,7 @@ func (x *GetBalanceRequest) GetAccountId() string {
 	return ""
 }
 
-// GetBalanceResponse возвращает баланс счета.
+// GetBalanceResponse returns the account balance.
 type GetBalanceResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -891,12 +891,12 @@ func (x *GetBalanceResponse) GetBalance() *AccountBalance {
 	return nil
 }
 
-// ListEntriesRequest запрашивает выписку по счету или мерчанту с курсорной
-// пагинацией. Заполняется account_id или merchant_ref (хотя бы одно):
-// merchant_ref ограничивает выписку счетами мерчанта плана счетов (merchant и
-// payout); account_id вне этого набора отклоняется как ненайденный. Период
-// фильтрует по времени транзакции: period_from включительно, period_to
-// исключительно; незаданные границы не ограничивают.
+// ListEntriesRequest requests an account or merchant statement with cursor
+// pagination. Account_id or merchant_ref is provided (at least one):
+// merchant_ref restricts the statement to the merchant's accounts of the chart
+// of accounts (merchant and payout); an account_id outside this set is rejected
+// as not found. The period filters by transaction time: period_from inclusive,
+// period_to exclusive; unset bounds do not restrict.
 type ListEntriesRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -905,11 +905,11 @@ type ListEntriesRequest struct {
 	AccountId string `protobuf:"bytes,1,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
 	Limit     uint32 `protobuf:"varint,2,opt,name=limit,proto3" json:"limit,omitempty"`
 	Cursor    string `protobuf:"bytes,3,opt,name=cursor,proto3" json:"cursor,omitempty"`
-	// MerchantRef задает фильтр по счетам мерчанта (аддитивно cf-3.2, CBL-2.10).
+	// MerchantRef specifies the filter by merchant accounts (additive cf-3.2, CBL-2.10).
 	MerchantRef string `protobuf:"bytes,4,opt,name=merchant_ref,json=merchantRef,proto3" json:"merchant_ref,omitempty"`
-	// PeriodFrom задает нижнюю границу периода включительно.
+	// PeriodFrom specifies the lower period bound, inclusive.
 	PeriodFrom *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=period_from,json=periodFrom,proto3" json:"period_from,omitempty"`
-	// PeriodTo задает верхнюю границу периода исключительно.
+	// PeriodTo specifies the upper period bound, exclusive.
 	PeriodTo *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=period_to,json=periodTo,proto3" json:"period_to,omitempty"`
 }
 
@@ -987,7 +987,7 @@ func (x *ListEntriesRequest) GetPeriodTo() *timestamppb.Timestamp {
 	return nil
 }
 
-// ListEntriesResponse возвращает страницу проводок.
+// ListEntriesResponse returns a page of entries.
 type ListEntriesResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -1043,14 +1043,14 @@ func (x *ListEntriesResponse) GetNextCursor() string {
 	return ""
 }
 
-// MerchantAccount описывает счет мерчанта с балансом для BFF-выписок.
+// MerchantAccount describes a merchant account with its balance for BFF statements.
 type MerchantAccount struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
 	AccountId string `protobuf:"bytes,1,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
-	// Type задает тип счета плана счетов: merchant или payout.
+	// Type specifies the chart-of-accounts type: merchant or payout.
 	Type      string    `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"`
 	Asset     string    `protobuf:"bytes,3,opt,name=asset,proto3" json:"asset,omitempty"`
 	Decimals  uint32    `protobuf:"varint,4,opt,name=decimals,proto3" json:"decimals,omitempty"`
@@ -1132,13 +1132,13 @@ func (x *MerchantAccount) GetReserved() *v1.Money {
 	return nil
 }
 
-// ListMerchantAccountsRequest запрашивает счета мерчанта с балансами.
+// ListMerchantAccountsRequest requests merchant accounts with balances.
 type ListMerchantAccountsRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// MerchantRef задает бизнес-ссылку мерчанта (обязательна).
+	// MerchantRef specifies the merchant business reference (required).
 	MerchantRef string `protobuf:"bytes,1,opt,name=merchant_ref,json=merchantRef,proto3" json:"merchant_ref,omitempty"`
 }
 
@@ -1181,8 +1181,8 @@ func (x *ListMerchantAccountsRequest) GetMerchantRef() string {
 	return ""
 }
 
-// ListMerchantAccountsResponse возвращает счета мерчанта по возрастанию
-// (asset, type); суммы без проводок отдаются нулевыми.
+// ListMerchantAccountsResponse returns merchant accounts ordered ascending by
+// (asset, type); accounts without postings are returned with zero balances.
 type ListMerchantAccountsResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

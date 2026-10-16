@@ -29,7 +29,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
-// PaymentService управляет жизненным циклом платежа.
+// PaymentService manages the payment lifecycle.
 type PaymentServiceClient interface {
 	CreatePayment(ctx context.Context, in *CreatePaymentRequest, opts ...grpc.CallOption) (*CreatePaymentResponse, error)
 	GetPayment(ctx context.Context, in *GetPaymentRequest, opts ...grpc.CallOption) (*GetPaymentResponse, error)
@@ -89,7 +89,7 @@ func (c *paymentServiceClient) CancelPayment(ctx context.Context, in *CancelPaym
 // All implementations must embed UnimplementedPaymentServiceServer
 // for forward compatibility.
 //
-// PaymentService управляет жизненным циклом платежа.
+// PaymentService manages the payment lifecycle.
 type PaymentServiceServer interface {
 	CreatePayment(context.Context, *CreatePaymentRequest) (*CreatePaymentResponse, error)
 	GetPayment(context.Context, *GetPaymentRequest) (*GetPaymentResponse, error)

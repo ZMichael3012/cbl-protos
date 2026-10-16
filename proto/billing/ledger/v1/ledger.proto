@@ -7,14 +7,14 @@ import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/cbl/cbl-protos/gen/go/billing/ledger/v1;ledgerv1";
 
-// EntryInput описывает проводку во входе транзакции двойной записи.
+// EntryInput describes an entry in a double-entry transaction input.
 message EntryInput {
   string account_id = 1;
   billing.common.v1.Direction direction = 2;
   billing.common.v1.Money amount = 3;
 }
 
-// Entry описывает сохраненную проводку.
+// Entry describes a persisted entry.
 message Entry {
   int64 entry_id = 1;
   string transaction_id = 2;
@@ -26,14 +26,14 @@ message Entry {
   google.protobuf.Timestamp created_at = 8;
 }
 
-// AccountBalance описывает доступный и зарезервированный остаток счета.
+// AccountBalance describes the available and reserved account balance.
 message AccountBalance {
   string account_id = 1;
   billing.common.v1.Money available = 2;
   billing.common.v1.Money reserved = 3;
 }
 
-// ReserveStatus описывает состояние резерва.
+// ReserveStatus describes the reserve state.
 enum ReserveStatus {
   RESERVE_STATUS_UNSPECIFIED = 0;
   RESERVE_STATUS_ACTIVE = 1;
@@ -41,7 +41,7 @@ enum ReserveStatus {
   RESERVE_STATUS_RELEASED = 3;
 }
 
-// PostTransactionRequest создает сбалансированную транзакцию.
+// PostTransactionRequest creates a balanced transaction.
 message PostTransactionRequest {
   string idempotency_key = 1;
   string ref_type = 2;
@@ -49,13 +49,13 @@ message PostTransactionRequest {
   repeated EntryInput entries = 4;
 }
 
-// PostTransactionResponse возвращает идентификатор транзакции и остатки после проводки.
+// PostTransactionResponse returns the transaction ID and balances after posting.
 message PostTransactionResponse {
   string transaction_id = 1;
   repeated AccountBalance balances_after = 2;
 }
 
-// ReserveRequest создает резерв средств на счете.
+// ReserveRequest creates a funds reserve on an account.
 message ReserveRequest {
   string idempotency_key = 1;
   string account_id = 2;
@@ -63,75 +63,75 @@ message ReserveRequest {
   string ref_id = 4;
 }
 
-// ReserveResponse возвращает резерв.
+// ReserveResponse returns the reserve.
 message ReserveResponse {
   string reserve_id = 1;
   ReserveStatus status = 2;
 }
 
-// CommitReserveRequest превращает резерв в проводку.
+// CommitReserveRequest turns a reserve into a posting.
 message CommitReserveRequest {
   string idempotency_key = 1;
   string reserve_id = 2;
 }
 
-// CommitReserveResponse возвращает состояние резерва.
+// CommitReserveResponse returns the reserve state.
 message CommitReserveResponse {
   string reserve_id = 1;
   ReserveStatus status = 2;
 }
 
-// ReleaseReserveRequest освобождает резерв.
+// ReleaseReserveRequest releases a reserve.
 message ReleaseReserveRequest {
   string idempotency_key = 1;
   string reserve_id = 2;
   string reason = 3;
 }
 
-// ReleaseReserveResponse возвращает состояние резерва.
+// ReleaseReserveResponse returns the reserve state.
 message ReleaseReserveResponse {
   string reserve_id = 1;
   ReserveStatus status = 2;
 }
 
-// GetBalanceRequest запрашивает баланс счета.
+// GetBalanceRequest requests an account balance.
 message GetBalanceRequest {
   string account_id = 1;
 }
 
-// GetBalanceResponse возвращает баланс счета.
+// GetBalanceResponse returns the account balance.
 message GetBalanceResponse {
   AccountBalance balance = 1;
 }
 
-// ListEntriesRequest запрашивает выписку по счету или мерчанту с курсорной
-// пагинацией. Заполняется account_id или merchant_ref (хотя бы одно):
-// merchant_ref ограничивает выписку счетами мерчанта плана счетов (merchant и
-// payout); account_id вне этого набора отклоняется как ненайденный. Период
-// фильтрует по времени транзакции: period_from включительно, period_to
-// исключительно; незаданные границы не ограничивают.
+// ListEntriesRequest requests an account or merchant statement with cursor
+// pagination. Account_id or merchant_ref is provided (at least one):
+// merchant_ref restricts the statement to the merchant's accounts of the chart
+// of accounts (merchant and payout); an account_id outside this set is rejected
+// as not found. The period filters by transaction time: period_from inclusive,
+// period_to exclusive; unset bounds do not restrict.
 message ListEntriesRequest {
   string account_id = 1;
   uint32 limit = 2;
   string cursor = 3;
-  // MerchantRef задает фильтр по счетам мерчанта (аддитивно cf-3.2, CBL-2.10).
+  // MerchantRef specifies the filter by merchant accounts (additive cf-3.2, CBL-2.10).
   string merchant_ref = 4;
-  // PeriodFrom задает нижнюю границу периода включительно.
+  // PeriodFrom specifies the lower period bound, inclusive.
   google.protobuf.Timestamp period_from = 5;
-  // PeriodTo задает верхнюю границу периода исключительно.
+  // PeriodTo specifies the upper period bound, exclusive.
   google.protobuf.Timestamp period_to = 6;
 }
 
-// ListEntriesResponse возвращает страницу проводок.
+// ListEntriesResponse returns a page of entries.
 message ListEntriesResponse {
   repeated Entry entries = 1;
   string next_cursor = 2;
 }
 
-// MerchantAccount описывает счет мерчанта с балансом для BFF-выписок.
+// MerchantAccount describes a merchant account with its balance for BFF statements.
 message MerchantAccount {
   string account_id = 1;
-  // Type задает тип счета плана счетов: merchant или payout.
+  // Type specifies the chart-of-accounts type: merchant or payout.
   string type = 2;
   string asset = 3;
   uint32 decimals = 4;
@@ -139,19 +139,19 @@ message MerchantAccount {
   billing.common.v1.Money reserved = 6;
 }
 
-// ListMerchantAccountsRequest запрашивает счета мерчанта с балансами.
+// ListMerchantAccountsRequest requests merchant accounts with balances.
 message ListMerchantAccountsRequest {
-  // MerchantRef задает бизнес-ссылку мерчанта (обязательна).
+  // MerchantRef specifies the merchant business reference (required).
   string merchant_ref = 1;
 }
 
-// ListMerchantAccountsResponse возвращает счета мерчанта по возрастанию
-// (asset, type); суммы без проводок отдаются нулевыми.
+// ListMerchantAccountsResponse returns merchant accounts ordered ascending by
+// (asset, type); accounts without postings are returned with zero balances.
 message ListMerchantAccountsResponse {
   repeated MerchantAccount accounts = 1;
 }
 
-// LedgerService ведет двойную запись, резервы и балансы.
+// LedgerService maintains double entry, reserves and balances.
 service LedgerService {
   rpc PostTransaction(PostTransactionRequest) returns (PostTransactionResponse);
   rpc Reserve(ReserveRequest) returns (ReserveResponse);
@@ -159,7 +159,7 @@ service LedgerService {
   rpc ReleaseReserve(ReleaseReserveRequest) returns (ReleaseReserveResponse);
   rpc GetBalance(GetBalanceRequest) returns (GetBalanceResponse);
   rpc ListEntries(ListEntriesRequest) returns (ListEntriesResponse);
-  // ListMerchantAccounts возвращает счета мерчанта с балансами (аддитивно
-  // cf-3.2, CBL-2.10; предпосылка 7.4 - балансы и ownership счетов BFF).
+  // ListMerchantAccounts returns merchant accounts with balances (additive
+  // cf-3.2, CBL-2.10; prerequisite 7.4 - balances and account ownership for the BFF).
   rpc ListMerchantAccounts(ListMerchantAccountsRequest) returns (ListMerchantAccountsResponse);
 }

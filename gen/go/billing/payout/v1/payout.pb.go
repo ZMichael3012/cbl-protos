@@ -22,7 +22,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// PayoutState описывает состояния конечного автомата выплаты.
+// PayoutState describes payout state machine states.
 type PayoutState int32
 
 const (
@@ -90,7 +90,7 @@ func (PayoutState) EnumDescriptor() ([]byte, []int) {
 	return file_billing_payout_v1_payout_proto_rawDescGZIP(), []int{0}
 }
 
-// Payout описывает выплату и ее текущее состояние.
+// Payout describes a payout and its current state.
 type Payout struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -107,8 +107,8 @@ type Payout struct {
 	FailureReason      string                 `protobuf:"bytes,9,opt,name=failure_reason,json=failureReason,proto3" json:"failure_reason,omitempty"`
 	StateVersion       uint64                 `protobuf:"varint,10,opt,name=state_version,json=stateVersion,proto3" json:"state_version,omitempty"`
 	CreatedAt          *timestamppb.Timestamp `protobuf:"bytes,11,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	// RefundInvoiceId задает исходный счет возврата: непустое значение означает,
-	// что выплата является возвратом (CBL-000, раздел 5).
+	// RefundInvoiceId specifies the source refund invoice: a non-empty value
+	// means the payout is a refund (CBL-000, section 5).
 	RefundInvoiceId string `protobuf:"bytes,12,opt,name=refund_invoice_id,json=refundInvoiceId,proto3" json:"refund_invoice_id,omitempty"`
 }
 
@@ -228,7 +228,7 @@ func (x *Payout) GetRefundInvoiceId() string {
 	return ""
 }
 
-// CreatePayoutRequest создает заявку на выплату.
+// CreatePayoutRequest creates a payout request.
 type CreatePayoutRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -240,9 +240,9 @@ type CreatePayoutRequest struct {
 	Network            string    `protobuf:"bytes,4,opt,name=network,proto3" json:"network,omitempty"`
 	DestinationAddress string    `protobuf:"bytes,5,opt,name=destination_address,json=destinationAddress,proto3" json:"destination_address,omitempty"`
 	MerchantRef        string    `protobuf:"bytes,6,opt,name=merchant_ref,json=merchantRef,proto3" json:"merchant_ref,omitempty"`
-	// RefundInvoiceId задает исходный счет возврата (CBL-003, раздел 2):
-	// непустое значение создает возврат тем же путем саги; сумма не больше
-	// возвращаемого остатка счета проверяется Billing API (7.x).
+	// RefundInvoiceId specifies the source refund invoice (CBL-003, section 2):
+	// a non-empty value creates a refund through the same saga; the amount not
+	// exceeding the refundable account balance is checked by the Billing API (7.x).
 	RefundInvoiceId string `protobuf:"bytes,7,opt,name=refund_invoice_id,json=refundInvoiceId,proto3" json:"refund_invoice_id,omitempty"`
 }
 
@@ -327,7 +327,7 @@ func (x *CreatePayoutRequest) GetRefundInvoiceId() string {
 	return ""
 }
 
-// CreatePayoutResponse возвращает созданную заявку.
+// CreatePayoutResponse returns the created payout request.
 type CreatePayoutResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -383,7 +383,7 @@ func (x *CreatePayoutResponse) GetState() PayoutState {
 	return PayoutState_PAYOUT_STATE_UNSPECIFIED
 }
 
-// ApprovePayoutRequest подтверждает или отклоняет крупную выплату.
+// ApprovePayoutRequest approves or rejects a large payout.
 type ApprovePayoutRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -455,7 +455,7 @@ func (x *ApprovePayoutRequest) GetReason() string {
 	return ""
 }
 
-// ApprovePayoutResponse возвращает состояние выплаты.
+// ApprovePayoutResponse returns the payout state.
 type ApprovePayoutResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -503,7 +503,7 @@ func (x *ApprovePayoutResponse) GetPayout() *Payout {
 	return nil
 }
 
-// GetPayoutRequest запрашивает выплату по идентификатору.
+// GetPayoutRequest requests a payout by identifier.
 type GetPayoutRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -551,7 +551,7 @@ func (x *GetPayoutRequest) GetPayoutId() string {
 	return ""
 }
 
-// GetPayoutResponse возвращает выплату.
+// GetPayoutResponse returns the payout.
 type GetPayoutResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
