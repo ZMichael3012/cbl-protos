@@ -85,8 +85,10 @@ This repository is a contracts library: it has no service stand and no e2e scena
 
 ## 5. Development rules
 
-- Every change: a task spec in `.specs/`, then the proto edit, `buf lint`, `buf breaking`
-  against the previous tag, generation, `go build ./...`.
+- Every change (CBL-001): a task spec in `.specs/` with the contract design and the
+  verification plan, then the proto or OpenAPI edit; the gate is `buf lint`, `buf breaking`
+  against the previous tag, generation and `go build ./...` (the contracts repository has no
+  runtime tests, the TDD gates apply to its consumer services), then review and commit.
 - The contract version is pinned by the tag `cbl-protos@<version>`; the version number lands
   in the specs of dependent services. Incremental additive changes and wave artifact
   finalizations after `cf-N` are released with the tag `cf-N.M` and recorded in `CBL-003`
