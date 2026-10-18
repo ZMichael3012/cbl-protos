@@ -14,6 +14,11 @@ message PayoutCommand {
   string network = 3;
   string address = 4;
   string idempotency_key = 5;
+  // RefundInvoiceId specifies the source invoice of a refund (additive
+  // cf-4.2): a non-empty value means the command pays out a refund and the
+  // Connector resolves the original provider invoice by this payment id and
+  // calls the provider refunds API instead of a payout (17.12).
+  string refund_invoice_id = 6;
 }
 
 // PayoutEventType describes payout lifecycle event types.
