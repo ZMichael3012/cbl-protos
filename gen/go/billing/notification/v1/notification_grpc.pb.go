@@ -20,6 +20,9 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	NotificationService_RegisterWebhookEndpoint_FullMethodName = "/billing.notification.v1.NotificationService/RegisterWebhookEndpoint"
+	NotificationService_ListWebhookDeliveries_FullMethodName   = "/billing.notification.v1.NotificationService/ListWebhookDeliveries"
+	NotificationService_GetDeliveryStats_FullMethodName        = "/billing.notification.v1.NotificationService/GetDeliveryStats"
+	NotificationService_ResendWebhookDelivery_FullMethodName   = "/billing.notification.v1.NotificationService/ResendWebhookDelivery"
 )
 
 // NotificationServiceClient is the client API for NotificationService service.
@@ -32,6 +35,12 @@ const (
 type NotificationServiceClient interface {
 	// RegisterWebhookEndpoint registers an endpoint and issues the signing secret.
 	RegisterWebhookEndpoint(ctx context.Context, in *RegisterWebhookEndpointRequest, opts ...grpc.CallOption) (*RegisterWebhookEndpointResponse, error)
+	// ListWebhookDeliveries reads the merchant delivery journal (CBL-8.3).
+	ListWebhookDeliveries(ctx context.Context, in *ListWebhookDeliveriesRequest, opts ...grpc.CallOption) (*ListWebhookDeliveriesResponse, error)
+	// GetDeliveryStats reads the delivery status aggregates (CBL-8.3).
+	GetDeliveryStats(ctx context.Context, in *GetDeliveryStatsRequest, opts ...grpc.CallOption) (*GetDeliveryStatsResponse, error)
+	// ResendWebhookDelivery resets a failed delivery for a new schedule round (CBL-8.3).
+	ResendWebhookDelivery(ctx context.Context, in *ResendWebhookDeliveryRequest, opts ...grpc.CallOption) (*ResendWebhookDeliveryResponse, error)
 }
 
 type notificationServiceClient struct {
@@ -52,6 +61,36 @@ func (c *notificationServiceClient) RegisterWebhookEndpoint(ctx context.Context,
 	return out, nil
 }
 
+func (c *notificationServiceClient) ListWebhookDeliveries(ctx context.Context, in *ListWebhookDeliveriesRequest, opts ...grpc.CallOption) (*ListWebhookDeliveriesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListWebhookDeliveriesResponse)
+	err := c.cc.Invoke(ctx, NotificationService_ListWebhookDeliveries_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *notificationServiceClient) GetDeliveryStats(ctx context.Context, in *GetDeliveryStatsRequest, opts ...grpc.CallOption) (*GetDeliveryStatsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetDeliveryStatsResponse)
+	err := c.cc.Invoke(ctx, NotificationService_GetDeliveryStats_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *notificationServiceClient) ResendWebhookDelivery(ctx context.Context, in *ResendWebhookDeliveryRequest, opts ...grpc.CallOption) (*ResendWebhookDeliveryResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ResendWebhookDeliveryResponse)
+	err := c.cc.Invoke(ctx, NotificationService_ResendWebhookDelivery_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // NotificationServiceServer is the server API for NotificationService service.
 // All implementations must embed UnimplementedNotificationServiceServer
 // for forward compatibility.
@@ -62,6 +101,12 @@ func (c *notificationServiceClient) RegisterWebhookEndpoint(ctx context.Context,
 type NotificationServiceServer interface {
 	// RegisterWebhookEndpoint registers an endpoint and issues the signing secret.
 	RegisterWebhookEndpoint(context.Context, *RegisterWebhookEndpointRequest) (*RegisterWebhookEndpointResponse, error)
+	// ListWebhookDeliveries reads the merchant delivery journal (CBL-8.3).
+	ListWebhookDeliveries(context.Context, *ListWebhookDeliveriesRequest) (*ListWebhookDeliveriesResponse, error)
+	// GetDeliveryStats reads the delivery status aggregates (CBL-8.3).
+	GetDeliveryStats(context.Context, *GetDeliveryStatsRequest) (*GetDeliveryStatsResponse, error)
+	// ResendWebhookDelivery resets a failed delivery for a new schedule round (CBL-8.3).
+	ResendWebhookDelivery(context.Context, *ResendWebhookDeliveryRequest) (*ResendWebhookDeliveryResponse, error)
 	mustEmbedUnimplementedNotificationServiceServer()
 }
 
@@ -74,6 +119,15 @@ type UnimplementedNotificationServiceServer struct{}
 
 func (UnimplementedNotificationServiceServer) RegisterWebhookEndpoint(context.Context, *RegisterWebhookEndpointRequest) (*RegisterWebhookEndpointResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RegisterWebhookEndpoint not implemented")
+}
+func (UnimplementedNotificationServiceServer) ListWebhookDeliveries(context.Context, *ListWebhookDeliveriesRequest) (*ListWebhookDeliveriesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListWebhookDeliveries not implemented")
+}
+func (UnimplementedNotificationServiceServer) GetDeliveryStats(context.Context, *GetDeliveryStatsRequest) (*GetDeliveryStatsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetDeliveryStats not implemented")
+}
+func (UnimplementedNotificationServiceServer) ResendWebhookDelivery(context.Context, *ResendWebhookDeliveryRequest) (*ResendWebhookDeliveryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ResendWebhookDelivery not implemented")
 }
 func (UnimplementedNotificationServiceServer) mustEmbedUnimplementedNotificationServiceServer() {}
 func (UnimplementedNotificationServiceServer) testEmbeddedByValue()                             {}
@@ -114,6 +168,60 @@ func _NotificationService_RegisterWebhookEndpoint_Handler(srv interface{}, ctx c
 	return interceptor(ctx, in, info, handler)
 }
 
+func _NotificationService_ListWebhookDeliveries_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListWebhookDeliveriesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NotificationServiceServer).ListWebhookDeliveries(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: NotificationService_ListWebhookDeliveries_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NotificationServiceServer).ListWebhookDeliveries(ctx, req.(*ListWebhookDeliveriesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NotificationService_GetDeliveryStats_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetDeliveryStatsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NotificationServiceServer).GetDeliveryStats(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: NotificationService_GetDeliveryStats_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NotificationServiceServer).GetDeliveryStats(ctx, req.(*GetDeliveryStatsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NotificationService_ResendWebhookDelivery_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResendWebhookDeliveryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NotificationServiceServer).ResendWebhookDelivery(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: NotificationService_ResendWebhookDelivery_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NotificationServiceServer).ResendWebhookDelivery(ctx, req.(*ResendWebhookDeliveryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // NotificationService_ServiceDesc is the grpc.ServiceDesc for NotificationService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -124,6 +232,18 @@ var NotificationService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RegisterWebhookEndpoint",
 			Handler:    _NotificationService_RegisterWebhookEndpoint_Handler,
+		},
+		{
+			MethodName: "ListWebhookDeliveries",
+			Handler:    _NotificationService_ListWebhookDeliveries_Handler,
+		},
+		{
+			MethodName: "GetDeliveryStats",
+			Handler:    _NotificationService_GetDeliveryStats_Handler,
+		},
+		{
+			MethodName: "ResendWebhookDelivery",
+			Handler:    _NotificationService_ResendWebhookDelivery_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

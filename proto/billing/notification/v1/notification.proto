@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package billing.notification.v1;
 
+import "google/protobuf/timestamp.proto";
+
 option go_package = "github.com/cbl/cbl-protos/gen/go/billing/notification/v1;notificationv1";
 
 // RegisterWebhookEndpointRequest registers a merchant webhook URL.
@@ -32,10 +34,116 @@ message RegisterWebhookEndpointResponse {
   string signing_secret = 4;
 }
 
+// WebhookDelivery describes one journal row (CBL-8.3, CF-3.2). The signed body is
+// not returned; body_sha256 identifies it for the operator surface.
+message WebhookDelivery {
+  // DeliveryID specifies the delivery identifier.
+  string delivery_id = 1;
+  // EventID specifies the evt_<uuidv7> merchant event identifier.
+  string event_id = 2;
+  // EndpointID specifies the target endpoint.
+  string endpoint_id = 3;
+  // EventType specifies the CF-3 event type.
+  string event_type = 4;
+  // Status specifies pending, delivered or failed.
+  string status = 5;
+  // Attempts specifies the total performed attempts across resends.
+  int32 attempts = 6;
+  // NextAttemptAt specifies the due time of the next attempt.
+  google.protobuf.Timestamp next_attempt_at = 7;
+  // LastError specifies the bounded last failure text.
+  string last_error = 8;
+  // CreatedAt specifies the delivery creation time.
+  google.protobuf.Timestamp created_at = 9;
+  // DeliveredAt specifies the success time.
+  google.protobuf.Timestamp delivered_at = 10;
+  // BodySHA256 specifies the hex SHA-256 of the signed body.
+  string body_sha256 = 11;
+}
+
+// ListWebhookDeliveriesRequest reads the merchant delivery journal.
+message ListWebhookDeliveriesRequest {
+  // MerchantID specifies the merchant (required).
+  string merchant_id = 1;
+  // EndpointID filters by endpoint (optional).
+  string endpoint_id = 2;
+  // Status filters by pending, delivered or failed (optional).
+  string status = 3;
+  // EventType filters by the CF-3 type (optional).
+  string event_type = 4;
+  // From filters created_at >= from (optional).
+  google.protobuf.Timestamp from = 5;
+  // To filters created_at < to (optional).
+  google.protobuf.Timestamp to = 6;
+  // PageSize specifies 1..100, the default is 20.
+  int32 page_size = 7;
+  // PageToken specifies the opaque keyset cursor from the previous page.
+  string page_token = 8;
+}
+
+// ListWebhookDeliveriesResponse returns a page of deliveries.
+message ListWebhookDeliveriesResponse {
+  // Deliveries specifies the page rows, created_at DESC.
+  repeated WebhookDelivery deliveries = 1;
+  // NextPageToken specifies the cursor of the next page; empty at the end.
+  string next_page_token = 2;
+}
+
+// GetDeliveryStatsRequest reads the delivery aggregates.
+message GetDeliveryStatsRequest {
+  // MerchantID specifies the merchant (required).
+  string merchant_id = 1;
+  // From filters created_at >= from; the default is now-24h.
+  google.protobuf.Timestamp from = 2;
+  // To filters created_at < to; the default is now.
+  google.protobuf.Timestamp to = 3;
+}
+
+// GetDeliveryStatsResponse returns the status counts for the window.
+message GetDeliveryStatsResponse {
+  // Total specifies all deliveries in the window.
+  int64 total = 1;
+  // Pending specifies the pending deliveries.
+  int64 pending = 2;
+  // Delivered specifies the delivered deliveries.
+  int64 delivered = 3;
+  // Failed specifies the failed deliveries.
+  int64 failed = 4;
+  // SuccessRate specifies delivered / (delivered + failed), 0 without terminal rows.
+  double success_rate = 5;
+}
+
+// ResendWebhookDeliveryRequest resets a failed delivery for a new schedule round.
+message ResendWebhookDeliveryRequest {
+  // DeliveryID specifies the failed delivery (required).
+  string delivery_id = 1;
+  // IdempotencyKey specifies the operation key; the reset is structurally
+  // idempotent, a repeated call cannot duplicate the send.
+  string idempotency_key = 2;
+}
+
+// ResendWebhookDeliveryResponse returns the delivery state after the reset.
+message ResendWebhookDeliveryResponse {
+  // DeliveryID specifies the delivery identifier.
+  string delivery_id = 1;
+  // Status specifies the current status.
+  string status = 2;
+  // Attempts specifies the total performed attempts.
+  int32 attempts = 3;
+  // NextAttemptAt specifies the due time of the next attempt.
+  google.protobuf.Timestamp next_attempt_at = 4;
+}
+
 // NotificationService manages merchant webhook delivery endpoints.
 // An internal service for the Billing API (7.x) and the Back-office (12.x);
 // only the merchant/operator REST is exposed externally.
 service NotificationService {
   // RegisterWebhookEndpoint registers an endpoint and issues the signing secret.
   rpc RegisterWebhookEndpoint(RegisterWebhookEndpointRequest) returns (RegisterWebhookEndpointResponse);
+  // ListWebhookDeliveries reads the merchant delivery journal (CBL-8.3).
+  rpc ListWebhookDeliveries(ListWebhookDeliveriesRequest) returns (ListWebhookDeliveriesResponse);
+  // GetDeliveryStats reads the delivery status aggregates (CBL-8.3).
+  rpc GetDeliveryStats(GetDeliveryStatsRequest) returns (GetDeliveryStatsResponse);
+  // ResendWebhookDelivery resets a failed delivery for a new schedule round (CBL-8.3).
+  rpc ResendWebhookDelivery(ResendWebhookDeliveryRequest) returns (ResendWebhookDeliveryResponse);
 }
