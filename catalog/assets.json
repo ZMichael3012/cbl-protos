@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "catalog_version": 1,
+  "updated_at": "2026-10-20",
+  "assets": [
+    {
+      "code": "BTC",
+      "name": "Bitcoin",
+      "decimals": 8,
+      "status": "active",
+      "networks": [
+        {
+          "code": "bitcoin",
+          "name": "Bitcoin",
+          "kind": "native",
+          "chain": "bitcoin",
+          "status": "active",
+          "provider_codes": {
+            "coingate": {"asset": "BTC"},
+            "nowpayments": {"asset": "btc"},
+            "bitpay": {"asset": "BTC"},
+            "btcpay": {"asset": "BTC"}
+          }
+        },
+        {
+          "code": "lightning",
+          "name": "Lightning Network",
+          "kind": "layer",
+          "chain": "bitcoin",
+          "status": "active",
+          "provider_codes": {
+            "btcpay": {"asset": "BTC"}
+          }
+        }
+      ]
+    },
+    {
+      "code": "ETH",
+      "name": "Ether",
+      "decimals": 18,
+      "status": "active",
+      "networks": [
+        {
+          "code": "ethereum",
+          "name": "Ethereum",
+          "kind": "native",
+          "chain": "ethereum",
+          "status": "active",
+          "provider_codes": {
+            "coingate": {"asset": "ETH"},
+            "nowpayments": {"asset": "eth"},
+            "bitpay": {"asset": "ETH"},
+            "btcpay": {"asset": "ETH"}
+          }
+        }
+      ]
+    },
+    {
+      "code": "USDT",
+      "name": "Tether USD",
+      "decimals": 6,
+      "status": "active",
+      "networks": [
+        {
+          "code": "usdt_trc20",
+          "name": "Tether on TRON (TRC20)",
+          "kind": "token",
+          "chain": "tron",
+          "status": "active",
+          "provider_codes": {
+            "coingate": {"asset": "USDT_TRC20"},
+            "nowpayments": {"asset": "usdttrc20"},
+            "bitpay": {"asset": "USDT"},
+            "btcpay": {"asset": "USDT"}
+          }
+        },
+        {
+          "code": "usdt_erc20",
+          "name": "Tether on Ethereum (ERC20)",
+          "kind": "token",
+          "chain": "ethereum",
+          "status": "active",
+          "provider_codes": {
+            "coingate": {"asset": "USDT_ERC20"},
+            "nowpayments": {"asset": "usdterc20"},
+            "bitpay": {"asset": "USDT"},
+            "btcpay": {"asset": "USDT"}
+          }
+        }
+      ]
+    },
+    {
+      "code": "USDC",
+      "name": "USD Coin",
+      "decimals": 6,
+      "status": "active",
+      "networks": [
+        {
+          "code": "usdc_erc20",
+          "name": "USD Coin on Ethereum (ERC20)",
+          "kind": "token",
+          "chain": "ethereum",
+          "status": "active",
+          "provider_codes": {
+            "coingate": {"asset": "USDC_ERC20"},
+            "nowpayments": {"asset": "usdc"},
+            "bitpay": {"asset": "USDC"},
+            "btcpay": {"asset": "USDC"}
+          }
+        }
+      ]
+    }
+  ]
+}

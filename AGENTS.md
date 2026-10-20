@@ -7,8 +7,8 @@ The em dash (U+2014) is forbidden; only the hyphen is used.
 
 ## 1. Purpose and boundaries
 
-In scope: `.proto` files, OpenAPI drafts, `buf` configuration, generated Go stubs
-(`gen/`), compatibility rules.
+In scope: `.proto` files, OpenAPI drafts, the asset and network catalog artifact with its
+JSON Schema, `buf` configuration, generated Go stubs (`gen/`), compatibility rules.
 
 Out of scope: service business logic, Schema Registry infrastructure (task 0.5),
 Billing API implementation (7.1 finalized by this repository, code - in `cbl-billing-api`)
@@ -25,7 +25,9 @@ Status: CF-1 is frozen by the tag `cbl-protos@cf-1` (13.10.2026), CF-2 - by the 
 `cbl-protos@cf-4` annotated (16.10.2026, spec `.specs/CBL-17.1-cf4-provider-contracts.md`);
 the CF-4 review follow-up is released additively as `cbl-protos@cf-4.1`;
 after a freeze only backward-compatible additive fields are released (the tag letter
-`cf-2.1`, CBL-10.6: `refund_invoice_id` in payout contracts).
+`cf-2.1`, CBL-10.6: `refund_invoice_id` in payout contracts). The asset and network
+catalog is released separately with `cbl-protos@catalog-<n>` (catalog version 1 -
+`cbl-protos@catalog-1`, 20.10.2026).
 
 ## 2. Contracts and consumers
 
@@ -42,6 +44,7 @@ after a freeze only backward-compatible additive fields are released (the tag le
 | `openapi/billing.v1.yaml` | `cbl-billing-api`, `cbl-api-gateway` |
 | `openapi/webhooks.v1.yaml` | `cbl-notification`, merchants, `cbl-billing-api` |
 | `openapi/admin.v1.yaml` | `cbl-backoffice`, `cbl-api-gateway` |
+| `catalog/assets.json` (+ `assets.schema.json`) | all services via `cbl-kit/catalog` |
 
 ## 3. Architecture
 
@@ -76,12 +79,13 @@ go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.34.2
 go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.5.1
 go run github.com/bufbuild/buf/cmd/buf@v1.47.2 generate
 
-# stub build
+# stub build and catalog validation
 go mod tidy
 go build ./...
+go test ./...
 ```
 
-This repository is a contracts library: it has no service stand and no e2e scenarios; validation runs are `make lint`, `make breaking` and `make build`, plus regeneration with `make generate` after .proto comment or schema edits.
+This repository is a contracts library: it has no service stand and no e2e scenarios; validation runs are `make lint`, `make breaking`, `make build` and `go test ./...` (the catalog contract test), plus regeneration with `make generate` after .proto comment or schema edits.
 
 ## 5. Development rules
 

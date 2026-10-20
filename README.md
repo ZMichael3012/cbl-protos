@@ -17,10 +17,18 @@ go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.34.2
 go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.5.1
 go run github.com/bufbuild/buf/cmd/buf@v1.47.2 generate
 
-# build
+# build and catalog validation
 go mod tidy
 go build ./...
+go test ./...
 ```
+
+## Asset catalog
+
+`catalog/assets.json` is the versioned asset and network catalog: canonical asset codes and
+decimals, canonical network codes and the provider wire codes. The JSON Schema is
+`catalog/assets.schema.json`; `go test ./...` validates the artifact and the schema rules
+that JSON Schema cannot express. Services parse the artifact with `cbl-kit/catalog`.
 
 ## Compatibility
 

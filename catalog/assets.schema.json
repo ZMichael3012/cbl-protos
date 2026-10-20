@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/cbl/cbl-protos/catalog/assets.schema.json",
+  "title": "CBL asset and network catalog",
+  "description": "Canonical crypto assets, their networks, decimals and provider wire codes. Cross-field rules (uniqueness, provider coverage) are enforced by the catalog tests in cbl-protos and cbl-kit.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "catalog_version", "updated_at", "assets"],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "catalog_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "updated_at": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+    },
+    "assets": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/asset"
+      }
+    }
+  },
+  "$defs": {
+    "asset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "name", "decimals", "status", "networks"],
+      "properties": {
+        "code": {
+          "type": "string",
+          "pattern": "^[A-Z0-9]{2,10}$",
+          "description": "Canonical uppercase asset code used by the ledger and reporting."
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "decimals": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18,
+          "description": "Canonical minor-unit scale of the asset."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["active", "deprecated"]
+        },
+        "networks": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/network"
+          }
+        }
+      }
+    },
+    "network": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "name", "kind", "chain", "status", "provider_codes"],
+      "properties": {
+        "code": {
+          "type": "string",
+          "pattern": "^[a-z0-9_]{2,32}$",
+          "description": "Canonical lowercase network code used in routing and capabilities."
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "kind": {
+          "type": "string",
+          "enum": ["native", "token", "layer"]
+        },
+        "chain": {
+          "type": "string",
+          "pattern": "^[a-z0-9_]{2,32}$"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["active", "deprecated"]
+        },
+        "provider_codes": {
+          "type": "object",
+          "additionalProperties": false,
+          "propertyNames": {
+            "enum": ["coingate", "nowpayments", "bitpay", "btcpay"]
+          },
+          "minProperties": 1,
+          "items": {
+            "$ref": "#/$defs/provider_code"
+          }
+        }
+      }
+    },
+    "provider_code": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["asset"],
+      "properties": {
+        "asset": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_.:-]{1,32}$",
+          "description": "Provider currency or asset code used on the wire."
+        },
+        "network": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_.:-]{1,32}$",
+          "description": "Optional provider platform or network code."
+        }
+      }
+    }
+  }
+}
