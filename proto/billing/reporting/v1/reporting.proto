@@ -4,7 +4,7 @@ package billing.reporting.v1;
 
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/cbl/cbl-protos/gen/go/billing/reporting/v1;reportingv1";
+option go_package = "github.com/ZMichael3012/cbl-protos/gen/go/billing/reporting/v1;reportingv1";
 
 // QueryRequest describes a report query to ClickHouse.
 // merchant_id is filled by the Billing API from the merchant token (11.4), not

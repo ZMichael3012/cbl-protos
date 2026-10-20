@@ -4,7 +4,7 @@ package billing.events.v1;
 
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/cbl/cbl-protos/gen/go/billing/events/v1;eventsv1";
+option go_package = "github.com/ZMichael3012/cbl-protos/gen/go/billing/events/v1;eventsv1";
 
 // EventMeta describes the service headers of a CBL envelope Kafka message.
 message EventMeta {

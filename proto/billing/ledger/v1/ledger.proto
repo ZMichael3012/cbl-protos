@@ -5,7 +5,7 @@ package billing.ledger.v1;
 import "billing/common/v1/money.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/cbl/cbl-protos/gen/go/billing/ledger/v1;ledgerv1";
+option go_package = "github.com/ZMichael3012/cbl-protos/gen/go/billing/ledger/v1;ledgerv1";
 
 // EntryInput describes an entry in a double-entry transaction input.
 message EntryInput {

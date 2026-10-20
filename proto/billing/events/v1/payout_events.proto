@@ -5,7 +5,7 @@ package billing.events.v1;
 import "billing/common/v1/money.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/cbl/cbl-protos/gen/go/billing/events/v1;eventsv1";
+option go_package = "github.com/ZMichael3012/cbl-protos/gen/go/billing/events/v1;eventsv1";
 
 // PayoutCommand describes a payout command in the payout.commands topic.
 message PayoutCommand {

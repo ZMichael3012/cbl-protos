@@ -5,7 +5,7 @@ package billing.payment.v1;
 import "billing/common/v1/money.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/cbl/cbl-protos/gen/go/billing/payment/v1;paymentv1";
+option go_package = "github.com/ZMichael3012/cbl-protos/gen/go/billing/payment/v1;paymentv1";
 
 // PaymentState describes payment state machine states.
 enum PaymentState {

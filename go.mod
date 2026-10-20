@@ -1,4 +1,4 @@
-module github.com/cbl/cbl-protos
+module github.com/ZMichael3012/cbl-protos
 
 go 1.26.0
 

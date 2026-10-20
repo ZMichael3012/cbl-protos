@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package billing.common.v1;
 
-option go_package = "github.com/cbl/cbl-protos/gen/go/billing/common/v1;commonv1";
+option go_package = "github.com/ZMichael3012/cbl-protos/gen/go/billing/common/v1;commonv1";
 
 // Money describes a monetary amount in asset minor units.
 // Within the system int64 in minor units plus decimals is used; float is forbidden.

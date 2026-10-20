@@ -5,7 +5,7 @@ package billing.connector.v1;
 import "billing/common/v1/money.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/cbl/cbl-protos/gen/go/billing/connector/v1;connectorv1";
+option go_package = "github.com/ZMichael3012/cbl-protos/gen/go/billing/connector/v1;connectorv1";
 
 // CanonicalPaymentStatusValue describes the canonical payment status at the provider.
 enum CanonicalPaymentStatusValue {

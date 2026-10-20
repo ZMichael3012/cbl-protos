@@ -5,7 +5,7 @@ package billing.quote.v1;
 import "billing/common/v1/money.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/cbl/cbl-protos/gen/go/billing/quote/v1;quotev1";
+option go_package = "github.com/ZMichael3012/cbl-protos/gen/go/billing/quote/v1;quotev1";
 
 // LockQuoteRequest locks the rate for the invoice lifetime.
 message LockQuoteRequest {

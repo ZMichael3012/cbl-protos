@@ -4,7 +4,7 @@ package billing.notification.v1;
 
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/cbl/cbl-protos/gen/go/billing/notification/v1;notificationv1";
+option go_package = "github.com/ZMichael3012/cbl-protos/gen/go/billing/notification/v1;notificationv1";
 
 // RegisterWebhookEndpointRequest registers a merchant webhook URL.
 // merchant_id is filled by the Billing API from the token (7.x); events is the

@@ -7,7 +7,7 @@
 package eventsv1
 
 import (
-	v1 "github.com/cbl/cbl-protos/gen/go/billing/common/v1"
+	v1 "github.com/ZMichael3012/cbl-protos/gen/go/billing/common/v1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
