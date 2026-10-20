@@ -172,6 +172,7 @@ paths:
           in: query
           schema:
             type: string
+            format: uuid
           description: Filter by merchant (empty means system and all other discrepancies)
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/Cursor'
@@ -189,10 +190,14 @@ paths:
                       $ref: '#/components/schemas/Discrepancy'
                   next_cursor:
                     type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /reconciliation/discrepancies/{id}/resolve:
     post:
       tags: [reconciliation]
@@ -232,6 +237,8 @@ paths:
           $ref: '#/components/responses/Problem'
         '409':
           $ref: '#/components/responses/Problem'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /providers/{id}/disable:
     post:
       tags: [providers]
@@ -576,6 +583,7 @@ components:
           enum: [confirm_platform, confirm_gateway, manual_adjustment]
         comment:
           type: string
+          maxLength: 1024
     AuditRecord:
       type: object
       description: >
